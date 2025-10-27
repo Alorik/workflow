@@ -36,7 +36,7 @@ export default function SignInPage() {
           <div className="space-y-4">
             {/* Google Sign In */}
             <Button
-              onClick={() => signIn("google")}
+              onClick={() => signIn("google", {callbackUrl: "/dashboard"}) }
               className="w-full h-12 bg-white hover:bg-gray-50 text-gray-700 border-2 border-gray-200 hover:border-gray-300 font-medium transition-all duration-200 flex items-center justify-center gap-3"
               variant="outline"
             >
