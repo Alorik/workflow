@@ -26,10 +26,10 @@ export async function GET(req: NextRequest) {
     orderBy: { createdAt: "desc" },
   });
 
-  return NextResponse.json(projectId);
+  return NextResponse.json(tasks);
 }
 
-export async function POST() {
+export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ error: "Not Authenticated" }, { status: 401 });
@@ -38,6 +38,12 @@ export async function POST() {
   const { title, description, projectId, assignedToId, dueDate } =
     await req.json();
 
+  if (!title || !projectId) {
+    return NextResponse.json(
+      { error: "Title and projectId required" },
+      {status: 400}
+    )
+  }
   const task = await prisma.task.create({
     data: {
       title,
