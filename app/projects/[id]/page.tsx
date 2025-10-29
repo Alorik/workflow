@@ -19,7 +19,7 @@ export default function TaskPage({
   const [sort, setSort] = useState("newest");
   const [users, setUsers] = useState([]);
   const [assignedToId, setAssignedToId] = useState<string | null>(null);
-  
+  const [dueDate, setDueDate] = useState("");
   
 
 const fetchTasks = async () => {
@@ -32,6 +32,8 @@ const fetchTasks = async () => {
   try {
     const res = await fetch(`/api/tasks?${params.toString()}`);
     const data = await res.json();
+        console.log("📋 Fetched tasks:", data);
+        console.log("📋 First task assignedTo:", data[0]?.assignedTo);
     if (Array.isArray(data)) setTasks(data);
     else setTasks([]);
   } catch (err) {
@@ -40,6 +42,19 @@ const fetchTasks = async () => {
   }
 };
 
+    const fetchUsers = async () => {
+      try {
+        const res = await fetch("/api/users");
+        if (res.ok) {
+          const data = await res.json();
+          setUsers(data);
+          console.log("👥 Fetched users:", data);
+        }
+      } catch (err) {
+        console.error("Error fetching users:", err);
+      }
+    };
+  
   useEffect(() => {
     fetch("/api/users")
       .then((res) => res.json())
@@ -48,6 +63,7 @@ const fetchTasks = async () => {
 
   useEffect(() => {
     fetchTasks();
+    fetchUsers();
   }, [projectId, filter, sort]);
 
   // ➕ Create a new task
@@ -58,7 +74,13 @@ const fetchTasks = async () => {
       const res = await fetch("/api/tasks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, description, projectId, assignedToId }),
+        body: JSON.stringify({
+          title,
+          description,
+          projectId,
+          assignedToId: assignedToId || null,
+          dueDate: dueDate || null,
+        }),
       });
 
       if (res.ok) {
@@ -67,6 +89,7 @@ const fetchTasks = async () => {
         setShowModal(false);
         setTitle("");
         setDescription("");
+        setAssignedToId(""); 
       } else {
         alert("Failed to create task. Please try again.");
       }
@@ -161,6 +184,16 @@ const fetchTasks = async () => {
                   </option>
                 ))}
               </select>
+            </div>
+            {/* Due Date Input */}
+            <div className="flex justify-between items-center mb-4">
+              <label className="font-medium text-sm">Due Date:</label>
+              <input
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                className="border rounded p-1 text-sm"
+              />
             </div>
 
             <div className="flex justify-end gap-2">

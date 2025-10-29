@@ -12,7 +12,8 @@ export async function PATCH(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    const { title, description, status } = await req.json();
+    const { title, description, status, dueDate, assignedToId } =
+      await req.json();
 
     const updatedTask = await prisma.task.update({
       where: { id: params.id },
@@ -20,6 +21,10 @@ export async function PATCH(
         ...(title && { title }),
         ...(description !== undefined && { description }),
         ...(status && { status }),
+        ...(dueDate !== undefined && {
+          dueDate: dueDate ? new Date(dueDate) : null,
+        }),
+        ...(assignedToId !== undefined && { assignedToId }),
       },
     });
 

@@ -15,7 +15,12 @@ interface TaskCardProps {
     title: string;
     description: string | null;
     status: string;
-    dueDate?: string | null; // ✅ added this
+    dueDate?: string | null;
+    assignedTo?: {
+      id: string;
+      name: string | null;
+      email: string | null;
+    } | null;
   };
   onUpdated?: () => void;
 }

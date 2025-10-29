@@ -81,7 +81,8 @@ export async function POST(req: NextRequest) {
 }
 
 
-export async function PUT(req:NextRequest){
+export async function PUT(req: NextRequest) {
+  
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ error: "Not Authenticated" }, { status: 401 });
@@ -104,7 +105,8 @@ export async function PUT(req:NextRequest){
   return NextResponse.json(task);
 }
 
-export async function DELETE(req:NextRequest) {
+export async function DELETE(req: NextRequest) {
+  
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ error: "Not Authenticated" }, { status: 401 });
