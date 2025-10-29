@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect} from "react";
 
 const statusColors = {
   todo: "bg-gray-200 text-gray-700",
@@ -31,6 +31,9 @@ export default function TaskCard({ task, onUpdated }: TaskCardProps) {
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description || "");
   const [dueDate, setDueDate] = useState(task.dueDate || "");
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState("");
+
 
   // ✅ Update only status (from dropdown)
   async function updateStatus(newStatus: string) {
@@ -54,12 +57,65 @@ export default function TaskCard({ task, onUpdated }: TaskCardProps) {
     onUpdated?.();
   }
 
+  const addComment = async () => {
+    if (!newComment.trim()) return;
+
+    const res = await fetch("/api/comments", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({content: newComment, taskId: task.id})
+    });
+
+    const data = await res.json();
+    setComments([...comments, data]);
+    setNewComment("");
+    
+  }
+
+  useEffect(() => {
+    fetch(`/api/comments?taskId=${task.id}`)
+      .then((res) => res.json())
+      .then(setComments);
+  }, [task.id]);
+
+  
   return (
     <div className="p-4 bg-white rounded-xl shadow flex justify-between items-center">
       {/* ---------- Left: Task Info ---------- */}
       <div>
         <h3 className="font-semibold">{task.title}</h3>
         <p className="text-sm text-gray-500">{task.description}</p>
+
+        {/* Comments */}
+        <div className="mt-4">
+          <h4 className="text-sm font-medium mb-1">Comments</h4>
+          <div className="space-y-1 max-h-40 overflow-y-auto border p-2 rounded-md bg-gray-50">
+            {comments.map((comment) => (
+              <p key={comment.id} className="text-sm">
+                <span className="font-semibold">
+                  {comment.author.name || comment.author.email}:
+                </span>{" "}
+                {comment.content}
+              </p>
+            ))}
+          </div>
+
+          <div className="flex gap-2 mt-2">
+            <input
+              className="border rounded-md px-2 py-1 text-sm flex-1"
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              placeholder="Add a comment..."
+            />
+            <button
+              onClick={addComment}
+              className="bg-blue-600 text-white px-3 py-1 rounded-md text-sm"
+            >
+              Send
+            </button>
+          </div>
+        </div>
+
         {task.assignedTo && (
           <p className="text-xs text-gray-500">
             Assigned to: {task.assignedTo.name || task.assignedTo.email}
