@@ -15,23 +15,40 @@ export default function TaskPage({
   const [showModal, setShowModal] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [filter, setFilter] = useState<string>("all");
+  const [sort, setSort] = useState("newest");
+  const [users, setUsers] = useState([]);
+  const [assignedToId, setAssignedToId] = useState<string | null>(null);
+  
+  
 
-  const fetchTasks = async () => {
-    if (!projectId) return;
-    try {
-      const res = await fetch(`/api/tasks?projectId=${projectId}`);
-      const data = await res.json();
-      if (Array.isArray(data)) setTasks(data);
-      else setTasks([]);
-    } catch (err) {
-      console.error("Error fetching tasks:", err);
-      setTasks([]);
-    }
-  };
+const fetchTasks = async () => {
+  if (!projectId) return;
+
+  const params = new URLSearchParams({ projectId });
+  if (filter !== "all") params.append("status", filter);
+  if (sort !== "newest") params.append("sort", sort);
+
+  try {
+    const res = await fetch(`/api/tasks?${params.toString()}`);
+    const data = await res.json();
+    if (Array.isArray(data)) setTasks(data);
+    else setTasks([]);
+  } catch (err) {
+    console.error("Error fetching tasks:", err);
+    setTasks([]);
+  }
+};
+
+  useEffect(() => {
+    fetch("/api/users")
+      .then((res) => res.json())
+      .then(setUsers);
+  }, []);
 
   useEffect(() => {
     fetchTasks();
-  }, [projectId]);
+  }, [projectId, filter, sort]);
 
   // ➕ Create a new task
   async function handleCreateTask() {
@@ -41,7 +58,7 @@ export default function TaskPage({
       const res = await fetch("/api/tasks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, description, projectId }),
+        body: JSON.stringify({ title, description, projectId, assignedToId }),
       });
 
       if (res.ok) {
@@ -72,6 +89,29 @@ export default function TaskPage({
         >
           + New Task
         </button>
+      </div>
+
+      <div className="flex gap-3 mb-4">
+        <select
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          className="border rounded p-2 text-sm"
+        >
+          <option value="all">All</option>
+          <option value="todo">To Do</option>
+          <option value="in_progress">In Progress</option>
+          <option value="done">Done</option>
+        </select>
+
+        <select
+          value={sort}
+          onChange={(e) => setSort(e.target.value)}
+          className="border rounded p-2 text-sm"
+        >
+          <option value="newest">Newest</option>
+          <option value="oldest">Oldest</option>
+          <option value="due">Due Soon</option>
+        </select>
       </div>
 
       {/* Task List */}
@@ -105,6 +145,23 @@ export default function TaskPage({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
+
+            {/* Assigned To Dropdown */}
+            <div className="flex justify-between items-center mb-4">
+              <label className="font-medium text-sm">Assigned To:</label>
+              <select
+                value={assignedToId || ""}
+                onChange={(e) => setAssignedToId(e.target.value)}
+                className="border rounded p-1 text-sm"
+              >
+                <option value="">Unassigned</option>
+                {users.map((user: any) => (
+                  <option key={user.id} value={user.id}>
+                    {user.name || user.email}
+                  </option>
+                ))}
+              </select>
+            </div>
 
             <div className="flex justify-end gap-2">
               <button

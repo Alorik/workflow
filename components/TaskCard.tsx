@@ -15,8 +15,9 @@ interface TaskCardProps {
     title: string;
     description: string | null;
     status: string;
+    dueDate?: string | null; // ✅ added this
   };
-  onUpdated?: () => void; // To refresh parent after update
+  onUpdated?: () => void;
 }
 
 export default function TaskCard({ task, onUpdated }: TaskCardProps) {
@@ -24,8 +25,9 @@ export default function TaskCard({ task, onUpdated }: TaskCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description || "");
+  const [dueDate, setDueDate] = useState(task.dueDate || "");
 
-  // Update only status (dropdown)
+  // ✅ Update only status (from dropdown)
   async function updateStatus(newStatus: string) {
     setStatus(newStatus);
     await fetch(`/api/tasks/${task.id}`, {
@@ -36,12 +38,12 @@ export default function TaskCard({ task, onUpdated }: TaskCardProps) {
     onUpdated?.();
   }
 
-  // Edit entire task
+  // ✅ Edit entire task (title, desc, dueDate, status)
   async function handleUpdate() {
     await fetch(`/api/tasks/${task.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, description, status }),
+      body: JSON.stringify({ title, description, status, dueDate }), // include dueDate
     });
     setIsEditing(false);
     onUpdated?.();
@@ -49,11 +51,24 @@ export default function TaskCard({ task, onUpdated }: TaskCardProps) {
 
   return (
     <div className="p-4 bg-white rounded-xl shadow flex justify-between items-center">
+      {/* ---------- Left: Task Info ---------- */}
       <div>
         <h3 className="font-semibold">{task.title}</h3>
         <p className="text-sm text-gray-500">{task.description}</p>
+        {task.assignedTo && (
+          <p className="text-xs text-gray-500">
+            Assigned to: {task.assignedTo.name || task.assignedTo.email}
+          </p>
+        )}
+
+        {task.dueDate && (
+          <p className="text-xs text-gray-400 mt-1">
+            Due: {new Date(task.dueDate).toLocaleDateString()}
+          </p>
+        )}
       </div>
 
+      {/* ---------- Right: Status + Edit ---------- */}
       <div className="flex items-center gap-2">
         <select
           value={status}
@@ -75,7 +90,7 @@ export default function TaskCard({ task, onUpdated }: TaskCardProps) {
         </button>
       </div>
 
-      {/* Edit Modal */}
+      {/* ---------- Edit Modal ---------- */}
       {isEditing && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-lg">
@@ -94,6 +109,19 @@ export default function TaskCard({ task, onUpdated }: TaskCardProps) {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
+
+            {/* ✅ Due Date input (only in modal) */}
+            <div className="flex justify-between items-center mb-4">
+              <label className="font-medium text-sm">Due Date:</label>
+              <input
+                type="date"
+                value={
+                  dueDate ? new Date(dueDate).toISOString().split("T")[0] : ""
+                }
+                onChange={(e) => setDueDate(e.target.value)}
+                className="border rounded p-1 text-sm"
+              />
+            </div>
 
             <div className="flex justify-between items-center mb-4">
               <label className="font-medium text-sm">Status:</label>
@@ -123,10 +151,9 @@ export default function TaskCard({ task, onUpdated }: TaskCardProps) {
               </button>
               <button
                 onClick={async () => {
-                  
-                    await fetch(`/api/tasks/${task.id}`, { method: "DELETE" });
-                    onUpdated?.(); // refresh parent
-                  
+                  await fetch(`/api/tasks/${task.id}`, { method: "DELETE" });
+                  onUpdated?.(); // refresh parent
+                  setIsEditing(false);
                 }}
                 className="px-2 py-1 text-xs bg-red-500 text-white rounded"
               >

@@ -3,15 +3,17 @@ import { prisma } from "@/lib/prisma";
 import { authOptions } from "../auth/[...nextauth]/route";
 import { getServerSession } from "next-auth";
 
+
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
-
   if (!session) {
     return NextResponse.json({ error: "Not Authenticated" }, { status: 401 });
   }
 
   const { searchParams } = new URL(req.url);
   const projectId = searchParams.get("projectId");
+  const status = searchParams.get("status"); // new
+  const sort = searchParams.get("sort"); 
 
   if (!projectId) {
     return NextResponse.json(
@@ -19,11 +21,27 @@ export async function GET(req: NextRequest) {
       { status: 400 }
     );
   }
+  const orderBy =
+    sort === "oldest"
+      ? { createdAt: "asc" }
+      : sort === "due"
+      ? { dueDate: "asc" }
+      : { createdAt: "desc" };
+  
+   const where: any = { projectId };
+   if (status && status !== "all") {
+     where.status = status;
+   }
+
 
   const tasks = await prisma.task.findMany({
-    where: { projectId },
-    include: { assignedTo: true },
-    orderBy: { createdAt: "desc" },
+    where,
+    include: {
+      assignedTo: {
+        select: { id: true, name: true, email: true },
+      },
+    },
+    orderBy,
   });
 
   return NextResponse.json(tasks);
@@ -49,17 +67,21 @@ export async function POST(req: NextRequest) {
       title,
       description,
       projectId,
-      assignedToId,
+      assignedToId: assignedToId || null,
       dueDate: dueDate ? new Date(dueDate) : null,
     },
-    include: { assignedTo: true },
+    include: {
+      assignedTo: {
+        select: { id: true, name: true, email: true },
+      },
+    },
   });
 
   return NextResponse.json(task);
 }
 
 
-export async function PUT(){
+export async function PUT(req:NextRequest){
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ error: "Not Authenticated" }, { status: 401 });
@@ -82,7 +104,7 @@ export async function PUT(){
   return NextResponse.json(task);
 }
 
-export async function DELETE() {
+export async function DELETE(req:NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ error: "Not Authenticated" }, { status: 401 });
