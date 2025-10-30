@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "../auth/[...nextauth]/route";
 import { getServerSession } from "next-auth";
-
+import { broadcastMessage } from "../socket/route";
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -76,7 +76,10 @@ export async function POST(req: NextRequest) {
       },
     },
   });
-
+  broadcastMessage({
+    type: "TASK_CREATED",
+    data: task,
+  });
   return NextResponse.json(task);
 }
 

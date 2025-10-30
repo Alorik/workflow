@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import Link from "next/link";
 import { authOptions } from "../api/auth/[...nextauth]/route";
 import { PrismaClient } from "@prisma/client";
+import SignInButton from "@/components/SignInButton";
 
 const prisma = new PrismaClient();
 
@@ -10,16 +11,14 @@ export default async function DashboardPage() {
 
   if (!session?.user?.email) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen">
-        <p className="text-lg mb-4">
+      <div className="flex flex-col items-center justify-center h-screen  bg-white/10 border">
+        <p className="text-2xl text-gray-900 mb-4">
           You need to sign in to view your dashboard.
         </p>
-        <Link
-          href="/signin"
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg"
-        >
-          Sign In
-        </Link>
+
+        <div className="flex items-center justify-center x">
+          <SignInButton />
+        </div>
       </div>
     );
   }
@@ -37,7 +36,7 @@ export default async function DashboardPage() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Your Projects</h1>
         <Link
-          href="/dashboard"
+          href="/projects"
           className="px-4 py-2 bg-blue-600 text-white rounded-xl"
         >
           + New Project

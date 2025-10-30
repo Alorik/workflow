@@ -1,5 +1,7 @@
 "use client";
 
+
+import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 
 export default function Projectpage() {
@@ -7,40 +9,93 @@ export default function Projectpage() {
   const [name, setName] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
+  const [loading, setLoading] = useState(false);
 
+  const router = useRouter();
   useEffect(() => {
-    fetch("/api/projects")
-      .then((res) => res.json())
-      .then((data) => setProjects(data));
+    fetchProjects();
   }, []);
 
-  const createProject = async () => {
-    const res = await fetch("/api/projects", {
-      method: "POST",
-      headers: { "Content-type": "application/json" },
-      body: JSON.stringify({ name }),
-    });
+  const fetchProjects = async () => {
+    try {
+      const res = await fetch("/api/projects");
+      if (!res.ok) throw new Error("Failed to fetch projects");
+      const data = await res.json();
+      setProjects(data);
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+      alert("Failed to load projects");
+    }
+  };
 
-    const newProject = await res.json();
-    setProjects([...projects, newProject]);
-    setName("");
+  const createProject = async () => {
+    if (!name.trim()) {
+      alert("Please enter a project name");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch("/api/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name.trim() }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to create project");
+      }
+
+      const newProject = await res.json();
+      router.push("/dashboard");
+      setProjects([...projects, newProject]);
+      setName("");
+    } catch (error) {
+      console.error("Error creating project:", error);
+      alert(error.message || "Failed to create project");
+    } finally {
+      setLoading(false);
+    }
+
   };
 
   const updateProject = async (id: string) => {
-    const res = await fetch("api/projects", {
-      method: "PUT",
-      headers: { "Content-type": "application/json" },
-      body: JSON.stringify({ id, name: editName }),
-    });
+    if (!editName.trim()) {
+      alert("Please enter a project name");
+      return;
+    }
 
-    const updated = await res.json();
-    setProjects(projects.map((p) => (p.id === id ? updated : p)));
-    setEditingId(null);
+    try {
+      const res = await fetch("/api/projects", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, name: editName.trim() }),
+      });
+
+      if (!res.ok) throw new Error("Failed to update project");
+
+      const updated = await res.json();
+      setProjects(projects.map((p) => (p.id === id ? updated : p)));
+      setEditingId(null);
+    } catch (error) {
+      console.error("Error updating project:", error);
+      alert("Failed to update project");
+    }
   };
 
   const deleteProject = async (id: string) => {
-    await fetch(`/api/projects?id=${id}`, { method: "DELETE" });
-    setProjects(projects.filter((p) => p.id !== id));
+    if (!confirm("Are you sure you want to delete this project?")) return;
+
+    try {
+      const res = await fetch(`/api/projects?id=${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete project");
+
+      setProjects(projects.filter((p) => p.id !== id));
+    } catch (error) {
+      console.error("Error deleting project:", error);
+      alert("Failed to delete project");
+    }
   };
 
   return (
@@ -52,73 +107,82 @@ export default function Projectpage() {
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
+          onKeyPress={(e) => e.key === "Enter" && createProject()}
           placeholder="New project name"
           className="border p-2 rounded mr-2"
         />
         <button
           onClick={createProject}
-          className="bg-blue-500 text-white px-4 py-2 rounded"
+          disabled={loading || !name.trim()}
+          className="bg-blue-500 text-white px-4 py-2 rounded disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
-          Create
+          {loading ? "Creating..." : "Create"}
         </button>
       </div>
 
-      {/* projects list */}
-
-      <ul>
-        {projects.map((project: any) => (
-          <li
-            key={project.id}
-            className="border p-2 rounded mb-2 flex justify-between items-center"
-          >
-            {editingId === project.id ? (
-              // Edit Mode
-              <>
-                <input
-                  type="text"
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  className="border p-1 rounded mr-2"
-                />
-                <button
-                  onClick={() => updateProject(project.id)}
-                  className="bg-green-500 text-white px-2 py-1 rounded mr-1"
-                >
-                  Save
-                </button>
-                <button
-                  onClick={() => setEditingId(null)}
-                  className="bg-gray-400 text-white px-2 py-1 rounded"
-                >
-                  Cancel
-                </button>
-              </>
-            ) : (
-              // View Mode
-              <>
-                <span>{project.name}</span>
-                <div>
-                  <button
-                    onClick={() => {
-                      setEditingId(project.id);
-                      setEditName(project.name);
-                    }}
-                    className="bg-yellow-400 text-white px-2 py-1 rounded mr-1"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => deleteProject(project.id)}
-                    className="bg-red-500 text-white px-2 py-1 rounded"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </>
-            )}
-          </li>
-        ))}
-      </ul>
+      {projects.length === 0 ? (
+        <p className="text-gray-500">
+          No projects yet. Create one to get started!
+        </p>
+      ) : (
+        <ul>
+          {projects.map((project: any) => (
+            <li
+              key={project.id}
+              className="border p-2 rounded mb-2 flex justify-between items-center"
+            >
+              {editingId === project.id ? (
+                <>
+                  <input
+                    type="text"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    onKeyPress={(e) =>
+                      e.key === "Enter" && updateProject(project.id)
+                    }
+                    className="border p-1 rounded mr-2"
+                  />
+                  <div>
+                    <button
+                      onClick={() => updateProject(project.id)}
+                      className="bg-green-500 text-white px-2 py-1 rounded mr-1"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={() => setEditingId(null)}
+                      className="bg-gray-400 text-white px-2 py-1 rounded"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <span>{project.name}</span>
+                  <div>
+                    <button
+                      onClick={() => {
+                        setEditingId(project.id);
+                        setEditName(project.name);
+                      }}
+                      className="bg-yellow-400 text-white px-2 py-1 rounded mr-1"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => deleteProject(project.id)}
+                      className="bg-red-500 text-white px-2 py-1 rounded"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

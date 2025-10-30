@@ -8,7 +8,7 @@ export default function TaskPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  // ✅ Unwrap params using React.use()
+
   const { id: projectId } = use(params);
 
   const [tasks, setTasks] = useState<any[]>([]);
@@ -54,6 +54,22 @@ const fetchTasks = async () => {
         console.error("Error fetching users:", err);
       }
     };
+  
+   useEffect(() => {
+     const ws = new WebSocket("ws://localhost:3000/api/socket");
+
+     ws.onopen = () => console.log("✅ Connected to WebSocket");
+     ws.onmessage = (event) => {
+       const message = JSON.parse(event.data);
+       console.log("📩 Message received:", message);
+
+       if (message.type === "TASK_UPDATED") {
+         // refresh task list or update state
+       }
+     };
+
+     return () => ws.close();
+   }, []);
   
   useEffect(() => {
     fetch("/api/users")
