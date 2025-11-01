@@ -1,9 +1,11 @@
+import HomeHero from "@/components/Main";
 
 
-export default async function HomePage() {
 
-
+export default function HomePage() {
   return (
-    <div></div>
+    <section className="min-h-screen">
+      <HomeHero />
+    </section>
   );
 }
