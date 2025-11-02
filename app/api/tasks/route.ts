@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "../auth/[...nextauth]/route";
 import { getServerSession } from "next-auth";
-import { broadcastMessage } from "../socket/route";
+import { pusherServer } from "@/lib/pusher";
+
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -59,9 +60,10 @@ export async function POST(req: NextRequest) {
   if (!title || !projectId) {
     return NextResponse.json(
       { error: "Title and projectId required" },
-      {status: 400}
-    )
+      { status: 400 }
+    );
   }
+
   const task = await prisma.task.create({
     data: {
       title,
@@ -71,18 +73,15 @@ export async function POST(req: NextRequest) {
       dueDate: dueDate ? new Date(dueDate) : null,
     },
     include: {
-      assignedTo: {
-        select: { id: true, name: true, email: true },
-      },
+      assignedTo: { select: { id: true, name: true, email: true } },
     },
   });
-  broadcastMessage({
-    type: "TASK_CREATED",
-    data: task,
-  });
+
+//realtime broadcast channel
+  await pusherServer.trigger(`project-${projectId}`, "task-created", task);
+
   return NextResponse.json(task);
 }
-
 
 export async function PUT(req: NextRequest) {
   

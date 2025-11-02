@@ -28,7 +28,7 @@ export default function HomeHero() {
               whileTap={{ scale: 0.9 }}
               transition={{ type: "spring", stiffness: 300, damping: 20 }}
               className="flex cursor-pointer  mt-12 items-center justify-center gap-2 bg-gradient-to-b from-[#49be9b] to-[#437367] text-2xl text-white px-6 py-2 rounded-xl"
-              onClick={() => router.push("/signin")}
+              onClick={() => router.push("/dashboard")}
             >
               <span>Start</span>
               <MdKeyboardDoubleArrowRight className="text-3xl" />

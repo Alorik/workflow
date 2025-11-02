@@ -2,6 +2,7 @@
 
 import { use, useState, useEffect } from "react";
 import TaskCard from "@/components/TaskCard";
+import { pusherClient } from "@/lib/pusherClient";
 
 export default function TaskPage({
   params,
@@ -55,21 +56,24 @@ const fetchTasks = async () => {
       }
     };
   
-   useEffect(() => {
-     const ws = new WebSocket("ws://localhost:3000/api/socket");
+ useEffect(() => {
+   if (!projectId) return;
 
-     ws.onopen = () => console.log("✅ Connected to WebSocket");
-     ws.onmessage = (event) => {
-       const message = JSON.parse(event.data);
-       console.log("📩 Message received:", message);
+   // Subscribe to the project-specific channel
+   const channel = pusherClient.subscribe(`project-${projectId}`);
 
-       if (message.type === "TASK_UPDATED") {
-         // refresh task list or update state
-       }
-     };
+   // Listen for new task events
+   channel.bind("task-created", (newTask: any) => {
+     console.log("🟢 Real-time task received:", newTask);
+     setTasks((prev) => [newTask, ...prev]);
+   });
 
-     return () => ws.close();
-   }, []);
+   // Cleanup on unmount
+   return () => {
+     pusherClient.unsubscribe(`project-${projectId}`);
+   };
+ }, [projectId]);
+  
   
   useEffect(() => {
     fetch("/api/users")
