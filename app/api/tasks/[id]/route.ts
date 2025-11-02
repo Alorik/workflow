@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/route";
+import { broadcastMessage } from "@/lib/pusher";
 
 export async function PATCH(
   req: Request,
@@ -26,6 +27,17 @@ export async function PATCH(
         }),
         ...(assignedToId !== undefined && { assignedToId }),
       },
+      include: {
+        assignedTo: {
+          select: { id: true, name: true, email: true },
+        },
+      },
+    });
+
+    broadcastMessage({
+      projectId: updatedTask.projectId,
+      type: "TASK_UPDATED",
+      data: updatedTask,
     });
 
     return NextResponse.json(updatedTask);
@@ -38,7 +50,6 @@ export async function PATCH(
   }
 }
 
-
 export async function DELETE(
   req: Request,
   { params }: { params: { id: string } }
@@ -48,8 +59,14 @@ export async function DELETE(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    await prisma.task.delete({
+    const deletedTask = await prisma.task.delete({
       where: { id: params.id },
+    });
+
+    //  Broadcast the delete event
+    broadcastMessage({
+      type: "TASK_DELETED",
+      data: deletedTask,
     });
 
     return NextResponse.json({ success: true });

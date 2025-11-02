@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
+import { broadcastMessage } from "@/lib/pusher";
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -20,6 +21,11 @@ export async function POST(req: NextRequest) {
     include: { author: true },
   });
 
+    await broadcastMessage({
+      type: "COMMENT_ADDED",
+      data: comment,
+    });
+
   return NextResponse.json(comment);
 }
 
@@ -35,6 +41,7 @@ export async function GET(req: NextRequest) {
     include: { author: true },
     orderBy: { createdAt: "asc" },
   });
+
 
   return NextResponse.json(comments);
 }

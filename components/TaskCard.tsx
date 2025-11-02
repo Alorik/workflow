@@ -1,5 +1,7 @@
 "use client";
-import { useState, useEffect} from "react";
+import { useState, useEffect } from "react";
+import { pusherClient } from "@/lib/pusherClient";
+import { Task } from "@prisma/client";
 
 const statusColors = {
   todo: "bg-gray-200 text-gray-700",
@@ -31,11 +33,47 @@ export default function TaskCard({ task, onUpdated }: TaskCardProps) {
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description || "");
   const [dueDate, setDueDate] = useState(task.dueDate || "");
-  const [comments, setComments] = useState([]);
+  const [comments, setComments] = useState<any[]>([]);
   const [newComment, setNewComment] = useState("");
 
+  // Load comments
+  useEffect(() => {
+    fetch(`/api/comments?taskId=${task.id}`)
+      .then((res) => res.json())
+      .then(setComments);
+  }, [task.id]);
 
-  // ✅ Update only status (from dropdown)
+  // 🔔 Subscribe to real-time updates
+  useEffect(() => {
+    const channel = pusherClient.subscribe("workflow-channel");
+
+    channel.bind("TASK_UPDATED", (updatedTask: Task) => {
+      if (updatedTask.id === task.id) {
+        setTitle(updatedTask.title);
+        setDescription(updatedTask.description || "");
+        setStatus(updatedTask.status);
+        setDueDate(updatedTask.dueDate || "");
+      }
+    });
+
+    channel.bind("TASK_DELETED", (deleted: { id: string }) => {
+      if (deleted.id === task.id) {
+        onUpdated?.();
+      }
+    });
+
+    channel.bind("COMMENT_ADDED", (comment: any) => {
+      if (comment.taskId === task.id) {
+        setComments((prev) => [...prev, comment]);
+      }
+    });
+
+    return () => {
+      channel.unbind_all();
+      channel.unsubscribe();
+    };
+  }, [task.id]);
+
   async function updateStatus(newStatus: string) {
     setStatus(newStatus);
     await fetch(`/api/tasks/${task.id}`, {
@@ -43,48 +81,34 @@ export default function TaskCard({ task, onUpdated }: TaskCardProps) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: newStatus }),
     });
-    onUpdated?.();
   }
 
-  // ✅ Edit entire task (title, desc, dueDate, status)
   async function handleUpdate() {
     await fetch(`/api/tasks/${task.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, description, status, dueDate }), // include dueDate
+      body: JSON.stringify({ title, description, status, dueDate }),
     });
     setIsEditing(false);
-    onUpdated?.();
   }
 
   const addComment = async () => {
     if (!newComment.trim()) return;
-
     const res = await fetch("/api/comments", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({content: newComment, taskId: task.id})
+      body: JSON.stringify({ content: newComment, taskId: task.id }),
     });
-
     const data = await res.json();
     setComments([...comments, data]);
     setNewComment("");
-    
-  }
+  };
 
-  useEffect(() => {
-    fetch(`/api/comments?taskId=${task.id}`)
-      .then((res) => res.json())
-      .then(setComments);
-  }, [task.id]);
-
-  
   return (
     <div className="p-4 bg-white rounded-xl shadow flex justify-between items-center">
-      {/* ---------- Left: Task Info ---------- */}
       <div>
-        <h3 className="font-semibold">{task.title}</h3>
-        <p className="text-sm text-gray-500">{task.description}</p>
+        <h3 className="font-semibold">{title}</h3>
+        <p className="text-sm text-gray-500">{description}</p>
 
         {/* Comments */}
         <div className="mt-4">
@@ -115,21 +139,8 @@ export default function TaskCard({ task, onUpdated }: TaskCardProps) {
             </button>
           </div>
         </div>
-
-        {task.assignedTo && (
-          <p className="text-xs text-gray-500">
-            Assigned to: {task.assignedTo.name || task.assignedTo.email}
-          </p>
-        )}
-
-        {task.dueDate && (
-          <p className="text-xs text-gray-400 mt-1">
-            Due: {new Date(task.dueDate).toLocaleDateString()}
-          </p>
-        )}
       </div>
 
-      {/* ---------- Right: Status + Edit ---------- */}
       <div className="flex items-center gap-2">
         <select
           value={status}
@@ -151,7 +162,6 @@ export default function TaskCard({ task, onUpdated }: TaskCardProps) {
         </button>
       </div>
 
-      {/* ---------- Edit Modal ---------- */}
       {isEditing && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-lg">
@@ -171,7 +181,6 @@ export default function TaskCard({ task, onUpdated }: TaskCardProps) {
               onChange={(e) => setDescription(e.target.value)}
             />
 
-            {/* ✅ Due Date input (only in modal) */}
             <div className="flex justify-between items-center mb-4">
               <label className="font-medium text-sm">Due Date:</label>
               <input
@@ -213,7 +222,7 @@ export default function TaskCard({ task, onUpdated }: TaskCardProps) {
               <button
                 onClick={async () => {
                   await fetch(`/api/tasks/${task.id}`, { method: "DELETE" });
-                  onUpdated?.(); // refresh parent
+                  onUpdated?.();
                   setIsEditing(false);
                 }}
                 className="px-2 py-1 text-xs bg-red-500 text-white rounded"

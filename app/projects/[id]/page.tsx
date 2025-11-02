@@ -9,7 +9,6 @@ export default function TaskPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-
   const { id: projectId } = use(params);
 
   const [tasks, setTasks] = useState<any[]>([]);
@@ -21,60 +20,71 @@ export default function TaskPage({
   const [users, setUsers] = useState([]);
   const [assignedToId, setAssignedToId] = useState<string | null>(null);
   const [dueDate, setDueDate] = useState("");
-  
 
-const fetchTasks = async () => {
-  if (!projectId) return;
+  const fetchTasks = async () => {
+    if (!projectId) return;
 
-  const params = new URLSearchParams({ projectId });
-  if (filter !== "all") params.append("status", filter);
-  if (sort !== "newest") params.append("sort", sort);
+    const params = new URLSearchParams({ projectId });
+    if (filter !== "all") params.append("status", filter);
+    if (sort !== "newest") params.append("sort", sort);
 
-  try {
-    const res = await fetch(`/api/tasks?${params.toString()}`);
-    const data = await res.json();
-        console.log("📋 Fetched tasks:", data);
-        console.log("📋 First task assignedTo:", data[0]?.assignedTo);
-    if (Array.isArray(data)) setTasks(data);
-    else setTasks([]);
-  } catch (err) {
-    console.error("Error fetching tasks:", err);
-    setTasks([]);
-  }
-};
+    try {
+      const res = await fetch(`/api/tasks?${params.toString()}`);
+      const data = await res.json();
+      console.log("📋 Fetched tasks:", data);
+      console.log("📋 First task assignedTo:", data[0]?.assignedTo);
+      if (Array.isArray(data)) setTasks(data);
+      else setTasks([]);
+    } catch (err) {
+      console.error("Error fetching tasks:", err);
+      setTasks([]);
+    }
+  };
 
-    const fetchUsers = async () => {
-      try {
-        const res = await fetch("/api/users");
-        if (res.ok) {
-          const data = await res.json();
-          setUsers(data);
-          console.log("👥 Fetched users:", data);
-        }
-      } catch (err) {
-        console.error("Error fetching users:", err);
+  const fetchUsers = async () => {
+    try {
+      const res = await fetch("/api/users");
+      if (res.ok) {
+        const data = await res.json();
+        setUsers(data);
+        console.log("👥 Fetched users:", data);
       }
+    } catch (err) {
+      console.error("Error fetching users:", err);
+    }
+  };
+  useEffect(() => {
+    if (!projectId) return;
+
+    // 🔹 Subscribe to the project-specific channel
+    const channel = pusherClient.subscribe(`project-${projectId}`);
+
+    // 🔹 Handle a new task being created
+  channel.bind("task-created", (newTask: any) => {
+    console.log("🟢 Real-time task received:", newTask);
+    setTasks((prev) => [newTask, ...prev]);
+  });
+
+    // 🔹 Handle a task being updated
+    channel.bind("task-updated", (updatedTask: any) => {
+      console.log("🟣 Task updated in real time:", updatedTask);
+      setTasks((prev) =>
+        prev.map((t) => (t.id === updatedTask.id ? updatedTask : t))
+      );
+    });
+
+    // 🔹 Handle a task being deleted (optional, if you add delete later)
+    channel.bind("task-deleted", (deletedTaskId: string) => {
+      console.log("🔴 Task deleted in real time:", deletedTaskId);
+      setTasks((prev) => prev.filter((t) => t.id !== deletedTaskId));
+    });
+
+    // Cleanup on unmount
+    return () => {
+      pusherClient.unsubscribe(`project-${projectId}`);
     };
-  
- useEffect(() => {
-   if (!projectId) return;
+  }, [projectId]);
 
-   // Subscribe to the project-specific channel
-   const channel = pusherClient.subscribe(`project-${projectId}`);
-
-   // Listen for new task events
-   channel.bind("task-created", (newTask: any) => {
-     console.log("🟢 Real-time task received:", newTask);
-     setTasks((prev) => [newTask, ...prev]);
-   });
-
-   // Cleanup on unmount
-   return () => {
-     pusherClient.unsubscribe(`project-${projectId}`);
-   };
- }, [projectId]);
-  
-  
   useEffect(() => {
     fetch("/api/users")
       .then((res) => res.json())
@@ -109,7 +119,7 @@ const fetchTasks = async () => {
         setShowModal(false);
         setTitle("");
         setDescription("");
-        setAssignedToId(""); 
+        setAssignedToId("");
       } else {
         alert("Failed to create task. Please try again.");
       }
