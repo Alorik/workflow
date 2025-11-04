@@ -20,9 +20,12 @@ model User{
   sessions  Session[]
   projects  Project[]
   tasks     Task[]
-  comments  Comment[]    
+  comments  Comment[]  
+  activities   Activity[]  
+  notification  Notification[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+
 }
 
 model Project{
@@ -33,9 +36,11 @@ model Project{
   owner        User     @relation(fields: [ownerId], references: [id])
   ownerId      String
   tasks        Task[]
+  activities   Activity[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
+
 
 model Task {
   id           String     @id @default(cuid())
@@ -46,10 +51,12 @@ model Task {
   projectId    String
   assignedTo   User?      @relation(fields: [assignedToId], references: [id])
   assignedToId String?
-  comments     Comment[]
+  comments     Comment[]  
+  activities   Activity[]
   dueDate      DateTime?  // Added this
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
+
 }
 
 model Comment {
@@ -87,4 +94,28 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+
+model Activity {
+  id          String   @id @default(cuid())
+  type        String   // "TASK_CREATED", "TASK_UPDATED", "COMMENT_ADDED", etc.
+  message     String
+  projectId   String
+  taskId      String?
+  userId      String?
+  createdAt   DateTime @default(now())
+  project     Project  @relation(fields: [projectId], references: [id])
+  task        Task?    @relation(fields: [taskId], references: [id])
+  user        User?    @relation(fields: [userId], references: [id])
+}
+
+model Notification{
+  id          String   @id @default(cuid())
+  userId      String
+  message     String
+  link        String?
+  read        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
 }

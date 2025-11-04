@@ -3,6 +3,7 @@
 import { use, useState, useEffect } from "react";
 import TaskCard from "@/components/TaskCard";
 import { pusherClient } from "@/lib/pusherClient";
+import ActivityFeed from "@/components/ActivityFeed";
 
 export default function TaskPage({
   params,
@@ -31,8 +32,6 @@ export default function TaskPage({
     try {
       const res = await fetch(`/api/tasks?${params.toString()}`);
       const data = await res.json();
-      console.log("📋 Fetched tasks:", data);
-      console.log("📋 First task assignedTo:", data[0]?.assignedTo);
       if (Array.isArray(data)) setTasks(data);
       else setTasks([]);
     } catch (err) {
@@ -243,6 +242,9 @@ export default function TaskPage({
           </div>
         </div>
       )}
+      <div className="lg:col-span-1">
+        <ActivityFeed projectId={projectId} />
+      </div>
     </div>
   );
 }

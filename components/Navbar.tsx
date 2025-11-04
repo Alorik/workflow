@@ -5,7 +5,7 @@ import Link from "next/link";
 import Logo from "./Logo";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-
+import Notifications from "./Notifications";
 
 export default function Navbar() {
   const router = useRouter();
@@ -26,13 +26,14 @@ export default function Navbar() {
             <Logo />
           </Link>
           <motion.button
-            whileTap={{ scale: 0.9 }} 
+            whileTap={{ scale: 0.9 }}
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
             className="bg-gradient-to-r from-gray-300 to-gray-900 text-white px-6 py-2 rounded-lg font-medium shadow-md"
             onClick={handleAuthAction}
           >
             {status === "loading" ? "..." : session ? "Logout" : "Login"}
           </motion.button>
+          {session?.user?.id && <Notifications userId={session.user.id} />}
         </div>
       </div>
     </nav>
