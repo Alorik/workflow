@@ -1,3 +1,4 @@
+import { prisma } from "./prisma";
 import { pusherServer } from "./pusher";
 
 export async function sendNotification({

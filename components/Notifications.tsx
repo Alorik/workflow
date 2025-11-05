@@ -8,14 +8,16 @@ interface Notification {
   link?: string;
 }
 
-export default function Notifications({ userId }: { userId: string }) {
+export default function Notifications({ userId }: { userId?: string }) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // ✅ Fetch notifications from backend
   async function fetchNotifications() {
     try {
-      const res = await fetch(`/api/notifications?userID=${userId}`);
+      const res = await fetch("/api/notifications");
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       const data = await res.json();
       setNotifications(data || []);
     } catch (error) {
@@ -24,6 +26,7 @@ export default function Notifications({ userId }: { userId: string }) {
     }
   }
 
+  // ✅ Mark a single notification as read
   async function markAsRead(notificationId: string) {
     try {
       await fetch(`/api/notifications/${notificationId}/read`, {
@@ -37,19 +40,48 @@ export default function Notifications({ userId }: { userId: string }) {
     }
   }
 
+  // ✅ Mark ALL notifications as read when dropdown opens
+  async function markAllAsRead() {
+    try {
+      const unread = notifications.filter((n) => !n.read);
+      if (unread.length === 0) return;
+
+      await Promise.all(
+        unread.map((n) =>
+          fetch(`/api/notifications/${n.id}/read`, { method: "PATCH" })
+        )
+      );
+
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    } catch (error) {
+      console.error("Failed to mark all as read:", error);
+    }
+  }
+
+  // ✅ Handle bell click
+  function toggleDropdown() {
+    const nextState = !isOpen;
+    setIsOpen(nextState);
+    if (!isOpen) markAllAsRead(); // When opening dropdown, mark all as read
+  }
+
+  // ✅ Subscribe to Pusher (for real-time notifications)
   useEffect(() => {
     fetchNotifications();
 
-    const channel = pusherClient.subscribe(`user-${userId}`);
-    channel.bind("notification", (newNotification: Notification) => {
-      setNotifications((prev) => [newNotification, ...prev]);
-    });
+    if (userId) {
+      const channel = pusherClient.subscribe(`user-${userId}`);
+      channel.bind("notification", (newNotification: Notification) => {
+        setNotifications((prev) => [newNotification, ...prev]);
+      });
 
-    return () => {
-      pusherClient.unsubscribe(`user-${userId}`);
-    };
+      return () => {
+        pusherClient.unsubscribe(`user-${userId}`);
+      };
+    }
   }, [userId]);
 
+  // ✅ Close dropdown if clicked outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -75,7 +107,7 @@ export default function Notifications({ userId }: { userId: string }) {
     <div className="relative" ref={dropdownRef}>
       <button
         className="relative text-2xl hover:opacity-80 transition-opacity"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={toggleDropdown}
         aria-label="Notifications"
       >
         🔔
