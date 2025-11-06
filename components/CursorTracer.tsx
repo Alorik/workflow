@@ -1,24 +1,43 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useLayoutEffect, useRef } from "react";
 
-export default function CursorCard() {
-  const [trails, setTrails] = useState([]);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const [eyePositions, setEyePositions] = useState({});
-  const containerRef = useRef(null);
-  const lastPosRef = useRef({ x: 0, y: 0 });
-  const shapeRefs = useRef({});
+interface MousePosition {
+  x: number;
+  y: number;
+}
 
+interface Trail {
+  id: number;
+  x: number;
+  y: number;
+}
+
+interface EyeOffset {
+  x: number;
+  y: number;
+}
+
+interface EyePositions {
+  [key: string]: EyeOffset;
+}
+
+export default function CursorTracer() {
+  const [trails, setTrails] = useState<Trail[]>([]);
+  const [mousePos, setMousePos] = useState<MousePosition>({ x: 0, y: 0 });
+  const [eyePositions, setEyePositions] = useState<EyePositions>({});
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const lastPosRef = useRef<MousePosition>({ x: 0, y: 0 });
+  const shapeRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const frameRef = useRef<number | null>(null); // ✅ used instead of let frameId
+
+  // 🖱️ Handle mouse movement
   useEffect(() => {
-    const handleMouseMove = (e) => {
-      // Always update global mouse position for eye tracking
+    const handleMouseMove = (e: MouseEvent) => {
       setMousePos({ x: e.clientX, y: e.clientY });
 
       if (containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
-
-        // Only create trails when cursor is inside the container
         if (
           e.clientX >= rect.left &&
           e.clientX <= rect.right &&
@@ -27,14 +46,13 @@ export default function CursorCard() {
         ) {
           const x = e.clientX - rect.left;
           const y = e.clientY - rect.top;
-
           const dx = x - lastPosRef.current.x;
           const dy = y - lastPosRef.current.y;
           const distance = Math.sqrt(dx * dx + dy * dy);
 
           if (distance > 2) {
             const steps = Math.ceil(distance / 4);
-            const newTrails = [];
+            const newTrails: Trail[] = [];
 
             for (let i = 1; i <= steps; i++) {
               const t = i / steps;
@@ -53,53 +71,58 @@ export default function CursorCard() {
     };
 
     window.addEventListener("mousemove", handleMouseMove);
-
-    return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-    };
+    return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
+  // 🌀 Fade old trails
   useEffect(() => {
     const timer = setInterval(() => {
       setTrails((prev) => prev.slice(1));
     }, 35);
-
     return () => clearInterval(timer);
   }, []);
 
-  // Calculate eye positions whenever mouse moves
-  useEffect(() => {
-    const newEyePositions = {};
+  // 👀 Track eye movement with requestAnimationFrame
+  useLayoutEffect(() => {
+    const updateEyes = () => {
+      const newPositions: EyePositions = {};
 
-    Object.keys(shapeRefs.current).forEach((shapeId) => {
-      const shapeElement = shapeRefs.current[shapeId];
-      if (shapeElement) {
-        const rect = shapeElement.getBoundingClientRect();
-        const shapeCenterX = rect.left + rect.width / 2;
-        const shapeCenterY = rect.top + rect.height / 2;
+      Object.keys(shapeRefs.current).forEach((id) => {
+        const el = shapeRefs.current[id];
+        if (!el) return;
 
-        const dx = mousePos.x - shapeCenterX;
-        const dy = mousePos.y - shapeCenterY;
+        const rect = el.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const dx = mousePos.x - centerX;
+        const dy = mousePos.y - centerY;
         const distance = Math.sqrt(dx * dx + dy * dy);
         const maxMove = 8;
 
         if (distance < 1) {
-          newEyePositions[shapeId] = { x: 0, y: 0 };
+          newPositions[id] = { x: 0, y: 0 };
         } else {
           const moveX = (dx / distance) * Math.min(distance / 20, maxMove);
           const moveY = (dy / distance) * Math.min(distance / 20, maxMove);
-          newEyePositions[shapeId] = { x: moveX, y: moveY };
+          newPositions[id] = { x: moveX, y: moveY };
         }
-      }
-    });
+      });
 
-    setEyePositions(newEyePositions);
+      setEyePositions(newPositions);
+      frameRef.current = requestAnimationFrame(updateEyes);
+    };
+
+    frameRef.current = requestAnimationFrame(updateEyes);
+
+    return () => {
+      if (frameRef.current) cancelAnimationFrame(frameRef.current);
+    };
   }, [mousePos]);
 
   const shapes = [
-    { id: 1, x: "25%", y: "35%", color: "bg-emerald-500", type: "blob" },
-    { id: 2, x: "55%", y: "40%", color: "bg-sky-500", type: "square" },
-    { id: 3, x: "40%", y: "65%", color: "bg-orange-500", type: "circle" },
+    { id: "1", x: "25%", y: "35%", color: "bg-emerald-500", type: "blob" },
+    { id: "2", x: "55%", y: "40%", color: "bg-sky-500", type: "square" },
+    { id: "3", x: "40%", y: "65%", color: "bg-orange-500", type: "circle" },
   ];
 
   return (
@@ -107,11 +130,10 @@ export default function CursorCard() {
       ref={containerRef}
       className="w-full bg-amber-50 flex items-center justify-center relative overflow-hidden min-h-screen cursor-none"
     >
-      {/* Subtle trail */}
-      {trails.map((trail, index) => {
-        const progress = (index + 1) / trails.length;
+      {/* 🧵 Cursor trail */}
+      {trails.map((trail, i) => {
+        const progress = (i + 1) / trails.length;
         const size = 6 + progress * 4;
-
         return (
           <div
             key={trail.id}
@@ -131,10 +153,9 @@ export default function CursorCard() {
         );
       })}
 
-      {/* Shapes with eyes */}
+      {/* 😃 Shapes with eyes */}
       {shapes.map((shape) => {
-        const eyePos = eyePositions[shape.id] || { x: 0, y: 0 };
-
+        const eye = eyePositions[shape.id] || { x: 0, y: 0 };
         return (
           <div
             key={shape.id}
@@ -146,7 +167,6 @@ export default function CursorCard() {
               transform: "translate(-50%, -50%)",
             }}
           >
-            {/* Shape background */}
             <div
               className={`${shape.color} relative ${
                 shape.type === "circle"
@@ -162,30 +182,24 @@ export default function CursorCard() {
                     : undefined,
               }}
             >
-              {/* Eyes container */}
+              {/* 👀 Eyes */}
               <div className="absolute inset-0 flex items-center justify-center gap-4">
-                {/* Left eye */}
-                <div className="bg-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg">
+                {[0, 1].map((i) => (
                   <div
-                    className="bg-black rounded-full w-5 h-5 transition-transform duration-150 ease-out"
-                    style={{
-                      transform: `translate(${eyePos.x}px, ${eyePos.y}px)`,
-                    }}
-                  />
-                </div>
-
-                {/* Right eye */}
-                <div className="bg-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg">
-                  <div
-                    className="bg-black rounded-full w-5 h-5 transition-transform duration-150 ease-out"
-                    style={{
-                      transform: `translate(${eyePos.x}px, ${eyePos.y}px)`,
-                    }}
-                  />
-                </div>
+                    key={i}
+                    className="bg-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg"
+                  >
+                    <div
+                      className="bg-black rounded-full w-5 h-5 transition-transform duration-150 ease-out"
+                      style={{
+                        transform: `translate(${eye.x}px, ${eye.y}px)`,
+                      }}
+                    />
+                  </div>
+                ))}
               </div>
 
-              {/* Smile */}
+              {/* 🙂 Smile */}
               <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2">
                 <div className="w-16 h-8 border-b-4 border-black rounded-full" />
               </div>

@@ -1,8 +1,10 @@
 "use client";
-import { useState, useEffect } from "react";
+
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, MessageCircle, MoreVertical, User } from "lucide-react";
 
+// ✅ Task status config
 const statusConfig = {
   todo: {
     bg: "bg-gray-100",
@@ -22,9 +24,9 @@ const statusConfig = {
     border: "border-black",
     dot: "bg-gray-900",
   },
-};
+} as const;
 
-type Status = "todo" | "in_progress" | "done";
+type Status = keyof typeof statusConfig;
 
 interface Comment {
   id: string;
@@ -35,7 +37,22 @@ interface Comment {
   };
 }
 
-export default function TaskCard({ task, onUpdated }: any) {
+interface Task {
+  id: string;
+  title: string;
+  description?: string;
+  status: Status;
+  projectId: string;
+  assignedToId?: string | null;
+  dueDate?: string | null;
+}
+
+interface TaskCardProps {
+  task: Task;
+  onUpdated?: () => void;
+}
+
+export default function TaskCard({ task, onUpdated }: TaskCardProps) {
   const [status, setStatus] = useState<Status>(task.status);
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(task.title);
@@ -45,17 +62,13 @@ export default function TaskCard({ task, onUpdated }: any) {
   const [isLoadingComments, setIsLoadingComments] = useState(false);
   const [isPostingComment, setIsPostingComment] = useState(false);
 
-  // Fetch comments when component mounts
-  useEffect(() => {
-    fetchComments();
-  }, [task.id]);
-
-  async function fetchComments() {
+  // ✅ Fetch comments wrapped in useCallback (fixes missing-deps warning)
+  const fetchComments = useCallback(async () => {
     try {
       setIsLoadingComments(true);
       const res = await fetch(`/api/comments?taskId=${task.id}`);
       if (res.ok) {
-        const data = await res.json();
+        const data: Comment[] = await res.json();
         setComments(data || []);
       }
     } catch (error) {
@@ -63,15 +76,20 @@ export default function TaskCard({ task, onUpdated }: any) {
     } finally {
       setIsLoadingComments(false);
     }
-  }
+  }, [task.id]);
 
-  async function updateStatus(newStatus: string) {
-    setStatus(newStatus as Status);
+  useEffect(() => {
+    fetchComments();
+  }, [fetchComments]); // ✅ ESLint-safe dependency
+
+  async function updateStatus(newStatus: Status) {
+    setStatus(newStatus);
     await fetch(`/api/tasks/${task.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: newStatus }),
     });
+    onUpdated?.(); // ✅ Marks onUpdated as used
   }
 
   async function handleUpdate() {
@@ -81,6 +99,7 @@ export default function TaskCard({ task, onUpdated }: any) {
       body: JSON.stringify({ title, description }),
     });
     setIsEditing(false);
+    onUpdated?.();
   }
 
   async function handlePostComment() {
@@ -95,7 +114,7 @@ export default function TaskCard({ task, onUpdated }: any) {
       });
 
       if (res.ok) {
-        const newComment = await res.json();
+        const newComment: Comment = await res.json();
         setComments((prev) => [...prev, newComment]);
         setCommentText("");
       }
@@ -131,7 +150,6 @@ export default function TaskCard({ task, onUpdated }: any) {
         transition={{ type: "spring", stiffness: 400, damping: 30 }}
         className="group relative bg-white rounded-lg border-2 border-gray-200 hover:border-gray-900 overflow-hidden transition-all duration-300"
       >
-        {/* Animated border accent on hover */}
         <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-700 to-gray-500 opacity-0 group-hover:opacity-5 transition-opacity duration-300"></div>
 
         <div className="relative p-6">
@@ -147,9 +165,7 @@ export default function TaskCard({ task, onUpdated }: any) {
             </div>
 
             <div className="flex items-center gap-2">
-              <div
-                className={`w-2 h-2 rounded-full ${config.dot} flex-shrink-0`}
-              ></div>
+              <div className={`w-2 h-2 rounded-full ${config.dot}`}></div>
               <button
                 onClick={() => setIsEditing(true)}
                 className="p-2 hover:bg-gray-100 rounded-md transition-colors"
@@ -159,11 +175,11 @@ export default function TaskCard({ task, onUpdated }: any) {
             </div>
           </div>
 
-          {/* Status Badge */}
+          {/* Status */}
           <div className="mb-6">
             <select
               value={status}
-              onChange={(e) => updateStatus(e.target.value)}
+              onChange={(e) => updateStatus(e.target.value as Status)}
               className={`${config.bg} ${config.text} ${config.border} border-2 px-4 py-2 rounded-md text-xs font-bold uppercase tracking-widest cursor-pointer hover:opacity-90 transition-all`}
             >
               <option value="todo">To Do</option>
@@ -175,7 +191,7 @@ export default function TaskCard({ task, onUpdated }: any) {
           {/* Divider */}
           <div className="h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent mb-5"></div>
 
-          {/* Comments Section */}
+          {/* Comments */}
           <div>
             <div className="flex items-center gap-2 mb-3">
               <MessageCircle size={16} className="text-gray-400" />
@@ -194,7 +210,7 @@ export default function TaskCard({ task, onUpdated }: any) {
                 <div className="space-y-3">
                   {comments.map((comment) => (
                     <div key={comment.id} className="flex gap-2">
-                      <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
+                      <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
                         <User size={14} className="text-gray-600" />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -216,14 +232,14 @@ export default function TaskCard({ task, onUpdated }: any) {
               )}
             </div>
 
+            {/* Add Comment */}
             <div className="flex gap-2">
               <input
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === "Enter" && !isPostingComment) {
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !isPostingComment)
                     handlePostComment();
-                  }
                 }}
                 disabled={isPostingComment}
                 className="flex-1 bg-white border-2 border-gray-200 focus:border-gray-900 rounded-md px-4 py-2 text-sm placeholder:text-gray-400 focus:outline-none transition-colors disabled:opacity-50"
@@ -259,7 +275,6 @@ export default function TaskCard({ task, onUpdated }: any) {
               className="relative bg-white rounded-xl shadow-2xl w-full max-w-xl border-2 border-gray-200 overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Header bar */}
               <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 px-8 py-6">
                 <h2 className="text-2xl font-bold text-white tracking-tight">
                   Edit Task
@@ -295,8 +310,6 @@ export default function TaskCard({ task, onUpdated }: any) {
                       className="w-full bg-white border-2 border-gray-200 focus:border-gray-900 rounded-md p-3 text-base focus:outline-none transition-colors resize-none"
                       placeholder="Add task description..."
                       value={description}
-
-        
                       onChange={(e) => setDescription(e.target.value)}
                     />
                   </div>

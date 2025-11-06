@@ -7,29 +7,31 @@ import { logActivity } from "@/lib/activity";
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session) {
+  if (!session?.user?.id) {
     return NextResponse.json({ error: "Not Authenticated" }, { status: 401 });
   }
 
   const { searchParams } = new URL(req.url);
   const projectId = searchParams.get("projectId");
-  const status = searchParams.get("status"); // new
+  const status = searchParams.get("status");
   const sort = searchParams.get("sort");
 
   if (!projectId) {
     return NextResponse.json({ error: "Project ID required" }, { status: 400 });
   }
+
+  // ✅ Explicitly type your "where" filter instead of using any
+  const where: { projectId: string; status?: string } = { projectId };
+  if (status && status !== "all") {
+    where.status = status;
+  }
+
   const orderBy =
     sort === "oldest"
       ? { createdAt: "asc" }
       : sort === "due"
       ? { dueDate: "asc" }
       : { createdAt: "desc" };
-
-  const where: any = { projectId };
-  if (status && status !== "all") {
-    where.status = status;
-  }
 
   const tasks = await prisma.task.findMany({
     where,
@@ -46,7 +48,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session) {
+  if (!session?.user?.id) {
     return NextResponse.json({ error: "Not Authenticated" }, { status: 401 });
   }
 
@@ -88,7 +90,7 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session) {
+  if (!session?.user?.id) {
     return NextResponse.json({ error: "Not Authenticated" }, { status: 401 });
   }
 
@@ -107,20 +109,20 @@ export async function PUT(req: NextRequest) {
     include: { assignedTo: true },
   });
 
-await logActivity({
-  type: "TASK_UPDATED",
-  message: `${session.user.name} updated task: ${task.title}`,
-  projectId: task.projectId,
-  taskId: task.id,
-  userId: session.user.id,
-});
+  await logActivity({
+    type: "TASK_UPDATED",
+    message: `${session.user.name} updated task: ${task.title}`,
+    projectId: task.projectId,
+    taskId: task.id,
+    userId: session.user.id,
+  });
 
   return NextResponse.json(task);
 }
 
 export async function DELETE(req: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session) {
+  if (!session?.user?.id) {
     return NextResponse.json({ error: "Not Authenticated" }, { status: 401 });
   }
 
@@ -131,10 +133,7 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "Task ID required" }, { status: 400 });
   }
 
-  await prisma.task.delete({
-    where: { id },
-  });
-  return NextResponse.json({
-    success: true,
-  });
+  await prisma.task.delete({ where: { id } });
+
+  return NextResponse.json({ success: true });
 }

@@ -4,7 +4,6 @@ import GoogleProvider from "next-auth/providers/google";
 import bcrypt from "bcrypt";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
-import { NextResponse } from "next/server";
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -26,45 +25,33 @@ export const authOptions: NextAuthOptions = {
       },
 
       async authorize(credentials) {
-        try {
-          if (!credentials?.email || !credentials?.password) {
-            return NextResponse.json(
-              { error: "Email and password are required" },
-              { status: 400 }
-            ) as any;
-          }
-
-          const user = await prisma.user.findUnique({
-            where: { email: credentials.email },
-          });
-
-          if (!user || !user.password) {
-            return NextResponse.json(
-              { error: "User not found or password missing" },
-              { status: 404 }
-            ) as any;
-          }
-
-          const valid = await bcrypt.compare(
-            credentials.password,
-            user.password
-          );
-
-          if (!valid) {
-            return NextResponse.json(
-              { error: "Invalid password" },
-              { status: 401 }
-            ) as any;
-          }
-
-          return user;
-        } catch (err) {
-          console.error("Authorize Error:", err);
-          return NextResponse.json(
-            { error: "Something went wrong during authentication" },
-            { status: 500 }
-          ) as any;
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Email and password are required");
         }
+
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email },
+        });
+
+        if (!user || !user.password) {
+          throw new Error("User not found or password missing");
+        }
+
+        const isValid = await bcrypt.compare(
+          credentials.password,
+          user.password
+        );
+
+        if (!isValid) {
+          throw new Error("Invalid password");
+        }
+
+        // ✅ Must return a user object or null
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+        };
       },
     }),
   ],
@@ -75,11 +62,14 @@ export const authOptions: NextAuthOptions = {
 
   callbacks: {
     async jwt({ token, user }) {
-      if (user) token.id = user.id;
+      if (user) token.id = (user as { id: string }).id;
       return token;
     },
     async session({ session, token }) {
-      if (token) (session.user as any).id = token.id;
+      if (session.user && token?.id) {
+        // ✅ No `any` needed
+        session.user.id = token.id as string;
+      }
       return session;
     },
   },

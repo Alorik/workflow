@@ -23,13 +23,24 @@ import {
   Zap,
 } from "lucide-react";
 
+interface AnalyticsData {
+  totalTasks: number;
+  completed: number;
+  pending: number;
+  tasksByProject: {
+    projectId: string;
+    _count: { id: number };
+  }[];
+}
+
 export default function AnalyticsPage() {
-  const [data, setData] = useState<any>(null);
+const [data, setData] = useState<AnalyticsData | null>(null);
 
   useEffect(() => {
     fetch("/api/analytics")
       .then((res) => res.json())
-      .then(setData);
+      .then((json: AnalyticsData) => setData(json))
+      .catch((err) => console.error("Failed to fetch analytics:", err));
   }, []);
 
   if (!data) {
@@ -92,7 +103,7 @@ export default function AnalyticsPage() {
               Analytics Dashboard
             </h1>
             <p className="text-gray-600 font-medium">
-              Real-time insights into your team's performance
+              Real-time insights into your team`&apos;`s performance
             </p>
           </div>
           <div className="hidden md:flex items-center gap-3 px-5 py-3 bg-white/80 backdrop-blur-xl rounded-2xl border border-gray-200 shadow-lg">

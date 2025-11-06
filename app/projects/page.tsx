@@ -12,8 +12,16 @@ import {
   AlertCircle,
 } from "lucide-react";
 
+// ✅ Type Definitions
+interface Project {
+  id: string;
+  name: string;
+  description?: string | null;
+  createdAt?: string;
+}
+
 export default function Projectpage() {
-  const [projects, setProjects] = useState([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [name, setName] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
@@ -23,11 +31,12 @@ export default function Projectpage() {
     fetchProjects();
   }, []);
 
+  // ✅ Fetch Projects
   const fetchProjects = async () => {
     try {
       const res = await fetch("/api/projects");
       if (!res.ok) throw new Error("Failed to fetch projects");
-      const data = await res.json();
+      const data: Project[] = await res.json();
       setProjects(data);
     } catch (error) {
       console.error("Error fetching projects:", error);
@@ -35,6 +44,7 @@ export default function Projectpage() {
     }
   };
 
+  // ✅ Create Project
   const createProject = async () => {
     if (!name.trim()) {
       alert("Please enter a project name");
@@ -50,21 +60,24 @@ export default function Projectpage() {
       });
 
       if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || "Failed to create project");
+        const err = await res.json();
+        throw new Error(err.message || "Failed to create project");
       }
 
-      const newProject = await res.json();
-      setProjects([...projects, newProject]);
+      const newProject: Project = await res.json();
+      setProjects((prev) => [...prev, newProject]);
       setName("");
     } catch (error) {
       console.error("Error creating project:", error);
-      alert(error.message || "Failed to create project");
+      alert(
+        error instanceof Error ? error.message : "Failed to create project"
+      );
     } finally {
       setLoading(false);
     }
   };
 
+  // ✅ Update Project
   const updateProject = async (id: string) => {
     if (!editName.trim()) {
       alert("Please enter a project name");
@@ -80,8 +93,8 @@ export default function Projectpage() {
 
       if (!res.ok) throw new Error("Failed to update project");
 
-      const updated = await res.json();
-      setProjects(projects.map((p) => (p.id === id ? updated : p)));
+      const updated: Project = await res.json();
+      setProjects((prev) => prev.map((p) => (p.id === id ? updated : p)));
       setEditingId(null);
     } catch (error) {
       console.error("Error updating project:", error);
@@ -89,6 +102,7 @@ export default function Projectpage() {
     }
   };
 
+  // ✅ Delete Project
   const deleteProject = async (id: string) => {
     if (!confirm("Are you sure you want to delete this project?")) return;
 
@@ -96,7 +110,7 @@ export default function Projectpage() {
       const res = await fetch(`/api/projects?id=${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete project");
 
-      setProjects(projects.filter((p) => p.id !== id));
+      setProjects((prev) => prev.filter((p) => p.id !== id));
     } catch (error) {
       console.error("Error deleting project:", error);
       alert("Failed to delete project");
@@ -123,7 +137,7 @@ export default function Projectpage() {
           </div>
         </div>
 
-        {/* Create Project Card */}
+        {/* Create Project */}
         <div className="bg-white backdrop-blur-xl border border-gray-200 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 mb-8">
           <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
             <Plus className="w-5 h-5 text-indigo-600" />
@@ -180,7 +194,9 @@ export default function Projectpage() {
               <Folder className="w-5 h-5" />
               Your Projects ({projects.length})
             </h2>
-            {projects.map((project: any) => (
+
+            {/* ✅ Typed Project Mapping */}
+            {projects.map((project) => (
               <div
                 key={project.id}
                 className="group bg-white backdrop-blur-xl border border-gray-200 rounded-2xl p-5 shadow-md hover:shadow-xl hover:border-gray-300 transition-all duration-300"

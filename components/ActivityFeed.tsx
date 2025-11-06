@@ -1,22 +1,38 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Activity, Clock, User, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
+// ✅ Define proper types
+interface ActivityUser {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+}
+
+interface ProjectActivity {
+  id: string;
+  message: string;
+  type: string;
+  createdAt: string;
+  user?: ActivityUser | null;
+}
+
 export default function ActivityFeed({ projectId }: { projectId: string }) {
-  const [activities, setActivities] = useState<any[]>([]);
+  const [activities, setActivities] = useState<ProjectActivity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  async function fetchActivities() {
+  // ✅ Wrap in useCallback to fix dependency warning
+  const fetchActivities = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
+
       const res = await fetch(`/api/activities?projectId=${projectId}`);
-      if (!res.ok) {
-        throw new Error(`Failed to fetch: ${res.status}`);
-      }
-      const data = await res.json();
+      if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
+
+      const data: ProjectActivity[] = await res.json();
 
       if (Array.isArray(data)) {
         setActivities(data);
@@ -34,11 +50,12 @@ export default function ActivityFeed({ projectId }: { projectId: string }) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [projectId]);
 
+  // ✅ Dependency now correct
   useEffect(() => {
     fetchActivities();
-  }, [projectId]);
+  }, [fetchActivities]);
 
   function getInitials(name: string) {
     return name

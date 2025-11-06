@@ -33,6 +33,7 @@ export default function SignUpPage() {
         router.push("/signin");
       }
     } catch (err) {
+      console.error(err);
       setError("Server error, try again later.");
     } finally {
       setLoading(false);
