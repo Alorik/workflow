@@ -295,6 +295,8 @@ export default function TaskCard({ task, onUpdated }: any) {
                       className="w-full bg-white border-2 border-gray-200 focus:border-gray-900 rounded-md p-3 text-base focus:outline-none transition-colors resize-none"
                       placeholder="Add task description..."
                       value={description}
+
+        
                       onChange={(e) => setDescription(e.target.value)}
                     />
                   </div>
