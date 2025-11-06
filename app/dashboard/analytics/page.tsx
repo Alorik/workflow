@@ -18,7 +18,6 @@ import {
   Clock,
   ListTodo,
   TrendingUp,
-  Users,
   Folder,
   Activity,
   Zap,

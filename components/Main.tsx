@@ -5,16 +5,8 @@ import { motion } from "framer-motion";
 import {
   CheckCircle2,
   Users,
-  BarChart3,
-  Zap,
-  Shield,
-  Clock,
-  Star,
-  ArrowRight,
-  Sparkles,
   Target,
   TrendingUp,
-  Award,
   Rocket,
 } from "lucide-react";
 import { useRouter } from "next/navigation";

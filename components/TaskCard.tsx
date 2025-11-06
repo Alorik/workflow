@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Edit3, MessageCircle, MoreVertical, User } from "lucide-react";
+import { X, MessageCircle, MoreVertical, User } from "lucide-react";
 
 const statusConfig = {
   todo: {
