@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
           ],
         },
       });
-      if(mentionedUser){
+      if (mentionedUser) {
         await sendNotification({
           userId: mentionedUser.id,
           message: `${session.user.name} mentioned you in a comment.`,
@@ -56,7 +56,6 @@ export async function POST(req: NextRequest) {
   }
   return NextResponse.json(comment);
 }
-
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -70,7 +69,6 @@ export async function GET(req: NextRequest) {
     include: { author: true },
     orderBy: { createdAt: "asc" },
   });
-
 
   return NextResponse.json(comments);
 }

@@ -298,7 +298,7 @@ export default function AnalyticsPage() {
             </CardContent>
           </Card>
           {/* Tasks by Project */}
-          <Card className="group bg-white/80 backdrop-blur-xl border border-gray-200 hover:border-gray-300 transition-all duration-500 hover:shadow-2xl">
+          <Card className="group mt-10 bg-white/80 backdrop-blur-xl border border-gray-200 hover:border-gray-300 transition-all duration-500 hover:shadow-2xl">
             <CardContent className="p-8">
               <div className="flex items-center gap-3 mb-8">
                 <div className="p-3 bg-gradient-to-br from-primary-600 to-gray-600 rounded-xl shadow-lg shadow-indigo-500/30">

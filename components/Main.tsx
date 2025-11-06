@@ -1,47 +1,167 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { MdKeyboardDoubleArrowRight } from "react-icons/md";
 import { motion } from "framer-motion";
+import {
+  CheckCircle2,
+  Users,
+  BarChart3,
+  Zap,
+  Shield,
+  Clock,
+  Star,
+  ArrowRight,
+  Sparkles,
+  Target,
+  TrendingUp,
+  Award,
+  Rocket,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function HomeHero() {
   const router = useRouter();
+
   return (
-    <section>
-      <div className="flex justify-between max-w-9xl mx-auto mt-16 px-4 ">
-        {/* Left */}
-        <div className="flex flex-col items-start w-1/2">
-          <div className="text-6xl font-bold mt-30">
-            <span className="block mb-2">Track. Tweak.</span>
-            <span className="block">Transform. Thrive.</span>
-            <span className="bg-gradient-to-r  block from-[#4FAE91] to-[#6DB8A5] bg-clip-text text-transparent font-bold text-6xl mb-12">
-              Together.
-            </span>
-          </div>
+    <div className="bg-white overflow-hidden">
+      {/* HERO SECTION - ORIGINAL BUT ENHANCED */}
+      <section className="relative min-h-screen flex items-center">
+        {/* Animated Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white via-indigo-50/30 to-purple-50/30">
+          <div className="absolute top-20 left-10 w-72 h-72 bg-indigo-400/20 rounded-full blur-3xl animate-pulse"></div>
+          <div
+            className="absolute top-40 right-20 w-96 h-96 bg-purple-400/20 rounded-full blur-3xl animate-pulse"
+            style={{ animationDelay: "2s" }}
+          ></div>
+          <div
+            className="absolute bottom-20 left-1/3 w-80 h-80 bg-emerald-400/20 rounded-full blur-3xl animate-pulse"
+            style={{ animationDelay: "4s" }}
+          ></div>
+        </div>
 
-          <div className="text-2xl ">
-            Kickstart your journey with
-            <span className="font-bold">WorkFlow </span>
-          </div>
-          <div className="mb-32">
-            <motion.button
-              whileTap={{ scale: 0.9 }}
-              transition={{ type: "spring", stiffness: 300, damping: 20 }}
-              className="flex cursor-pointer  mt-12 items-center justify-center gap-2 bg-gradient-to-b from-[#49be9b] to-[#437367] text-2xl text-white px-6 py-2 rounded-xl"
-              onClick={() => router.push("/dashboard")}
+        <div className="max-w-7xl mx-auto px-4 py-20 relative z-10 w-full">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Left Content */}
+            <motion.div
+              initial={{ opacity: 0, x: -50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8 }}
+              className="space-y-8"
             >
-              <span>Start</span>
-              <MdKeyboardDoubleArrowRight className="text-3xl" />
-            </motion.button>
+              <div className="space-y-4">
+                <h1 className="text-7xl lg:text-8xl font-black leading-tight">
+                  <span className="block text-gray-900">Track. Tweak.</span>
+                  <span className="block text-gray-900">
+                    Transform. Thrive.
+                  </span>
+                  <span className="block bg-gradient-to-r from-[#4FAE91] via-[#6DB8A5] to-[#5CC9AC] bg-clip-text text-transparent">
+                    Together.
+                  </span>
+                </h1>
+              </div>
+
+              <p className="text-2xl text-gray-600 leading-relaxed">
+                Kickstart your journey with{" "}
+                <span className="font-bold text-gray-900">WorkFlow</span> — the
+                ultimate platform to manage projects, collaborate seamlessly,
+                and achieve extraordinary results.
+              </p>
+
+              <div className="flex flex-wrap gap-4">
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  whileHover={{ scale: 1.05 }}
+                  className="group flex items-center gap-3 bg-gradient-to-r from-[#49be9b] to-[#437367] text-white px-10 py-5 rounded-2xl text-xl font-bold shadow-2xl shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all"
+                  onClick={()=> router.push("/dashboard")}
+                >
+                  <span>Start</span>
+                  <MdKeyboardDoubleArrowRight className="text-3xl group-hover:translate-x-1 transition-transform" />
+                </motion.button>
+              </div>
+            </motion.div>
+
+            {/* Right Visual */}
+            <motion.div
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="relative"
+            >
+              <div className="relative bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 rounded-3xl p-12 shadow-2xl border border-white/50 backdrop-blur-xl">
+                {/* Floating Cards */}
+                <motion.div
+                  animate={{ y: [0, -20, 0] }}
+                  transition={{ duration: 4, repeat: Infinity }}
+                  className="absolute -top-6 -right-6 bg-white rounded-2xl p-6 shadow-2xl border border-gray-100"
+                >
+                  <TrendingUp className="w-8 h-8 text-emerald-600 mb-2" />
+                  <p className="text-3xl font-black text-gray-900">+47%</p>
+                  <p className="text-sm text-gray-600">Productivity</p>
+                </motion.div>
+
+                <motion.div
+                  animate={{ y: [0, 20, 0] }}
+                  transition={{ duration: 5, repeat: Infinity }}
+                  className="absolute -bottom-6 -left-6 bg-white rounded-2xl p-6 shadow-2xl border border-gray-100"
+                >
+                  <Users className="w-8 h-8 text-indigo-600 mb-2" />
+                  <p className="text-3xl font-black text-gray-900">50K+</p>
+                  <p className="text-sm text-gray-600">Active Teams</p>
+                </motion.div>
+
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between bg-white/50 backdrop-blur rounded-2xl p-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
+                        <CheckCircle2 className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-gray-900">
+                          Website Redesign
+                        </p>
+                        <p className="text-sm text-gray-600">Due in 3 days</p>
+                      </div>
+                    </div>
+                    <div className="text-2xl">✨</div>
+                  </div>
+
+                  <div className="flex items-center justify-between bg-white/50 backdrop-blur rounded-2xl p-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center">
+                        <Target className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-gray-900">
+                          Marketing Campaign
+                        </p>
+                        <p className="text-sm text-gray-600">In progress</p>
+                      </div>
+                    </div>
+                    <div className="text-2xl">🚀</div>
+                  </div>
+
+                  <div className="flex items-center justify-between bg-white/50 backdrop-blur rounded-2xl p-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center">
+                        <Rocket className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-gray-900">
+                          Product Launch
+                        </p>
+                        <p className="text-sm text-gray-600">Planning phase</p>
+                      </div>
+                    </div>
+                    <div className="text-2xl">💡</div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
           </div>
         </div>
+      </section>
 
-        {/* Right */}
-        <div className="backdrop-blur-3xl w-1/2 bg-gradient-to-b via-gray-300 via-indigo-200  to-gray-100">
-          
 
-        </div>
-      </div>
-    </section>
+    </div>
   );
 }

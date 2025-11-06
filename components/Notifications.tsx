@@ -1,11 +1,13 @@
-import { pusherClient } from "@/lib/pusherClient";
 import { useState, useEffect, useRef } from "react";
+import { Bell, X, Check, Inbox } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface Notification {
   id: string;
   message: string;
   read: boolean;
   link?: string;
+  createdAt?: string;
 }
 
 export default function Notifications({ userId }: { userId?: string }) {
@@ -13,7 +15,7 @@ export default function Notifications({ userId }: { userId?: string }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // ✅ Fetch notifications from backend
+  // Fetch notifications from backend
   async function fetchNotifications() {
     try {
       const res = await fetch("/api/notifications");
@@ -26,7 +28,7 @@ export default function Notifications({ userId }: { userId?: string }) {
     }
   }
 
-  // ✅ Mark a single notification as read
+  // Mark a single notification as read
   async function markAsRead(notificationId: string) {
     try {
       await fetch(`/api/notifications/${notificationId}/read`, {
@@ -40,7 +42,7 @@ export default function Notifications({ userId }: { userId?: string }) {
     }
   }
 
-  // ✅ Mark ALL notifications as read when dropdown opens
+  // Mark ALL notifications as read
   async function markAllAsRead() {
     try {
       const unread = notifications.filter((n) => !n.read);
@@ -51,37 +53,20 @@ export default function Notifications({ userId }: { userId?: string }) {
           fetch(`/api/notifications/${n.id}/read`, { method: "PATCH" })
         )
       );
-
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     } catch (error) {
       console.error("Failed to mark all as read:", error);
     }
   }
 
-  // ✅ Handle bell click
   function toggleDropdown() {
-    const nextState = !isOpen;
-    setIsOpen(nextState);
-    if (!isOpen) markAllAsRead(); // When opening dropdown, mark all as read
+    setIsOpen(!isOpen);
   }
 
-  // ✅ Subscribe to Pusher (for real-time notifications)
   useEffect(() => {
     fetchNotifications();
-
-    if (userId) {
-      const channel = pusherClient.subscribe(`user-${userId}`);
-      channel.bind("notification", (newNotification: Notification) => {
-        setNotifications((prev) => [newNotification, ...prev]);
-      });
-
-      return () => {
-        pusherClient.unsubscribe(`user-${userId}`);
-      };
-    }
   }, [userId]);
 
-  // ✅ Close dropdown if clicked outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -91,11 +76,9 @@ export default function Notifications({ userId }: { userId?: string }) {
         setIsOpen(false);
       }
     }
-
     if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside);
     }
-
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
@@ -105,62 +88,151 @@ export default function Notifications({ userId }: { userId?: string }) {
 
   return (
     <div className="relative" ref={dropdownRef}>
+      {/* Bell Button */}
       <button
-        className="relative text-2xl hover:opacity-80 transition-opacity"
+        className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors group"
         onClick={toggleDropdown}
         aria-label="Notifications"
       >
-        🔔
+        <Bell
+          size={22}
+          className={`transition-colors ${
+            unreadCount > 0 ? "text-gray-900" : "text-gray-600"
+          }`}
+        />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-semibold">
+          <motion.span
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="absolute -top-1 -right-1 h-5 w-5 bg-black text-white text-xs rounded-full flex items-center justify-center font-bold"
+          >
             {unreadCount > 9 ? "9+" : unreadCount}
-          </span>
+          </motion.span>
         )}
       </button>
 
-      {isOpen && (
-        <div className="absolute right-0 mt-3 w-80 bg-white shadow-lg rounded-xl p-3 z-50 max-h-96 overflow-y-auto border border-gray-200">
-          <div className="flex items-center justify-between mb-2 pb-2 border-b border-gray-200">
-            <h3 className="font-semibold text-gray-900">Notifications</h3>
-            {notifications.length > 0 && (
-              <button
-                onClick={() => setIsOpen(false)}
-                className="text-gray-400 hover:text-gray-600 text-sm"
-              >
-                ✕
-              </button>
-            )}
-          </div>
-
-          {notifications.length === 0 ? (
-            <p className="text-gray-400 text-sm text-center py-4">
-              No notifications
-            </p>
-          ) : (
-            <div className="space-y-1">
-              {notifications.map((n) => (
-                <a
-                  key={n.id}
-                  href={n.link || "#"}
-                  onClick={() => markAsRead(n.id)}
-                  className={`block p-3 text-sm rounded-md transition-colors ${
-                    n.read
-                      ? "text-gray-600 bg-gray-50 hover:bg-gray-100"
-                      : "text-gray-900 bg-blue-50 hover:bg-blue-100 font-medium"
-                  }`}
+      {/* Dropdown */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            transition={{ duration: 0.15 }}
+            className="absolute right-0 mt-2 w-96 bg-white shadow-2xl rounded-lg border-2 border-gray-200 z-50 overflow-hidden"
+          >
+            {/* Header */}
+            <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 px-5 py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Bell size={18} className="text-white" />
+                  <h3 className="font-bold text-white tracking-tight">
+                    Notifications
+                  </h3>
+                  {unreadCount > 0 && (
+                    <span className="bg-white text-gray-900 text-xs font-bold px-2 py-0.5 rounded-full">
+                      {unreadCount}
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="text-white/70 hover:text-white transition-colors p-1"
                 >
-                  <div className="flex items-start gap-2">
-                    {!n.read && (
-                      <span className="h-2 w-2 bg-blue-500 rounded-full mt-1.5 flex-shrink-0" />
-                    )}
-                    <span className="flex-1">{n.message}</span>
-                  </div>
-                </a>
-              ))}
+                  <X size={18} />
+                </button>
+              </div>
             </div>
-          )}
-        </div>
-      )}
+
+            {/* Mark all as read button */}
+            {unreadCount > 0 && (
+              <div className="px-5 py-3 border-b border-gray-200 bg-gray-50">
+                <button
+                  onClick={markAllAsRead}
+                  className="flex items-center gap-2 text-xs font-bold text-gray-700 hover:text-gray-900 uppercase tracking-wider transition-colors"
+                >
+                  <Check size={14} />
+                  Mark all as read
+                </button>
+              </div>
+            )}
+
+            {/* Notifications List */}
+            <div className="max-h-[420px] overflow-y-auto">
+              {notifications.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 px-5">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                    <Inbox size={32} className="text-gray-400" />
+                  </div>
+                  <p className="text-sm font-semibold text-gray-900 mb-1">
+                    All caught up!
+                  </p>
+                  <p className="text-sm text-gray-500 text-center">
+                    You have no notifications
+                  </p>
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-200">
+                  {notifications.map((n, index) => (
+                    <motion.a
+                      key={n.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.03 }}
+                      href={n.link || "#"}
+                      onClick={(e) => {
+                        if (!n.link || n.link === "#") {
+                          e.preventDefault();
+                        }
+                        markAsRead(n.id);
+                      }}
+                      className={`block px-5 py-4 transition-colors relative ${
+                        n.read
+                          ? "bg-white hover:bg-gray-50"
+                          : "bg-gray-50 hover:bg-gray-100"
+                      }`}
+                    >
+                      {/* Unread indicator bar */}
+                      {!n.read && (
+                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-black"></div>
+                      )}
+
+                      <div className="flex items-start gap-3">
+                        {/* Dot indicator */}
+                        <div className="flex-shrink-0 mt-1.5">
+                          {!n.read ? (
+                            <div className="w-2 h-2 bg-black rounded-full"></div>
+                          ) : (
+                            <div className="w-2 h-2 border-2 border-gray-300 rounded-full"></div>
+                          )}
+                        </div>
+
+                        {/* Message */}
+                        <div className="flex-1 min-w-0">
+                          <p
+                            className={`text-sm leading-relaxed ${
+                              n.read
+                                ? "text-gray-600"
+                                : "text-gray-900 font-medium"
+                            }`}
+                          >
+                            {n.message}
+                          </p>
+                          {n.createdAt && (
+                            <p className="text-xs text-gray-400 mt-1">
+                              {new Date(n.createdAt).toLocaleString()}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </motion.a>
+                  ))}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
