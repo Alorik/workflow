@@ -26,12 +26,12 @@ export async function GET(req: NextRequest) {
     where.status = status;
   }
 
-  const orderBy =
-    sort === "oldest"
-      ? { createdAt: "asc" }
-      : sort === "due"
-      ? { dueDate: "asc" }
-      : { createdAt: "desc" };
+const orderBy =
+  sort === "oldest"
+    ? { createdAt: "asc" as const }
+    : sort === "due"
+    ? { dueDate: "asc" as const }
+    : { createdAt: "desc" as const };
 
   const tasks = await prisma.task.findMany({
     where,
