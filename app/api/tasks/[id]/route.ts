@@ -1,15 +1,16 @@
-import { prisma } from "@/lib/prisma";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth"; 
-import { broadcastMessage } from "@/lib/pusher";
-import { pusherServer } from "@/lib/pusher"; // ✅ make sure this import exists
+import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { pusherServer, broadcastMessage } from "@/lib/pusher";
 import { sendNotification } from "@/lib/notify";
 
+// ✅ PATCH /api/tasks/[id]
 export async function PATCH(
-  req: Request,
-  { params }: { params: { id: string } }
+  req: NextRequest,
+  context: { params: { id: string } }
 ) {
+  const { params } = context;
   const session = await getServerSession(authOptions);
   if (!session?.user?.email)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -18,7 +19,6 @@ export async function PATCH(
     const { title, description, status, dueDate, assignedToId } =
       await req.json();
 
-    // ✅ Update the task
     const updatedTask = await prisma.task.update({
       where: { id: params.id },
       data: {
@@ -35,16 +35,19 @@ export async function PATCH(
       },
     });
 
-
-    if (updatedTask.assignedToId && updatedTask.assignedToId !== session.user.id) {
+    // ✅ Optional: send notification if task reassigned
+    if (
+      updatedTask.assignedToId &&
+      updatedTask.assignedToId !== session.user.id
+    ) {
       await sendNotification({
         userId: updatedTask.assignedToId,
         message: `${session.user.name} assigned you a task: ${updatedTask.title}`,
-        link: `/projects/${updatedTask.projectId}/tasks/${updatedTask.id}`
+        link: `/projects/${updatedTask.projectId}/tasks/${updatedTask.id}`,
       });
     }
 
-    // ✅ Log an activity in DB
+    // ✅ Create activity log
     const activity = await prisma.activity.create({
       data: {
         type: "TASK_UPDATED",
@@ -56,14 +59,13 @@ export async function PATCH(
       include: { user: true },
     });
 
-    // ✅ Broadcast the activity to the ActivityFeed (real-time update)
+    // ✅ Broadcast updates
     await pusherServer.trigger(
       `project-${updatedTask.projectId}`,
       "activity-created",
       activity
     );
 
-    // ✅ Broadcast the task update (for task list sync)
     broadcastMessage({
       projectId: updatedTask.projectId,
       type: "TASK_UPDATED",
@@ -80,10 +82,12 @@ export async function PATCH(
   }
 }
 
+// ✅ DELETE /api/tasks/[id]
 export async function DELETE(
-  req: Request,
-  { params }: { params: { id: string } }
+  req: NextRequest,
+  context: { params: { id: string } }
 ) {
+  const { params } = context;
   const session = await getServerSession(authOptions);
   if (!session?.user?.email)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -93,7 +97,7 @@ export async function DELETE(
       where: { id: params.id },
     });
 
-    // ✅ Log deletion as well (optional)
+    // ✅ Log activity
     await prisma.activity.create({
       data: {
         type: "TASK_DELETED",
@@ -104,7 +108,7 @@ export async function DELETE(
       },
     });
 
-    //  Broadcast the delete event
+    // ✅ Broadcast delete event
     broadcastMessage({
       projectId: deletedTask.projectId,
       type: "TASK_DELETED",
