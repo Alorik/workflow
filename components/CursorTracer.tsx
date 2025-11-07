@@ -159,7 +159,9 @@ export default function CursorTracer() {
         return (
           <div
             key={shape.id}
-            ref={(el) => (shapeRefs.current[shape.id] = el)}
+            ref={(el) => {
+              shapeRefs.current[shape.id] = el;
+            }}
             className="absolute"
             style={{
               left: shape.x,
