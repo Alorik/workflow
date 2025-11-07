@@ -362,6 +362,5 @@ export default function AnalyticsPage() {
           </Card>
         </div>
       </div>
-    </div>
   );
 }
