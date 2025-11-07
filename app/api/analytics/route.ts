@@ -1,23 +1,25 @@
 import { NextResponse } from "next/server";
-import { authOptions } from "@/lib/auth"; 
+import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) {
+    if (!session || !session.user?.id) {
       return NextResponse.json({ error: "not authenticated" }, { status: 401 });
     }
 
+    const ownerId = session.user.id;
+
     const totalTasks = await prisma.task.count({
-      where: { project: { ownerId: session.user.id } },
+      where: { project: { ownerId } },
     });
 
     const completed = await prisma.task.count({
       where: {
         status: { equals: "done", mode: "insensitive" },
-        project: { ownerId: session.user.id },
+        project: { ownerId },
       },
     });
 
@@ -32,8 +34,6 @@ export async function GET() {
       by: ["assignedToId"],
       _count: { id: true },
     });
-
- 
 
     return NextResponse.json({
       totalTasks,

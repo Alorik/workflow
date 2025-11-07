@@ -103,7 +103,7 @@ const [data, setData] = useState<AnalyticsData | null>(null);
               Analytics Dashboard
             </h1>
             <p className="text-gray-600 font-medium">
-              Real-time insights into your team`&apos;`s performance
+              Real-time insights into your team&apos;s performance
             </p>
           </div>
           <div className="hidden md:flex items-center gap-3 px-5 py-3 bg-white/80 backdrop-blur-xl rounded-2xl border border-gray-200 shadow-lg">
