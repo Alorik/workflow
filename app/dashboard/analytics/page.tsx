@@ -1,7 +1,9 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 
+// ✅ FIX: Imported PieLabelRenderProps for proper Recharts type support
 import {
   BarChart,
   Bar,
@@ -12,7 +14,9 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
+  PieLabelRenderProps, // ✅ added
 } from "recharts";
+
 import {
   CheckCircle2,
   Clock,
@@ -34,7 +38,7 @@ interface AnalyticsData {
 }
 
 export default function AnalyticsPage() {
-const [data, setData] = useState<AnalyticsData | null>(null);
+  const [data, setData] = useState<AnalyticsData | null>(null);
 
   useEffect(() => {
     fetch("/api/analytics")
@@ -61,7 +65,9 @@ const [data, setData] = useState<AnalyticsData | null>(null);
     );
   }
 
-  const completionRate = Math.round((data.completed / data.totalTasks) * 100) || 0;
+  const completionRate =
+    Math.round((data.completed / data.totalTasks) * 100) || 0;
+
   const statCards = [
     {
       title: "Total Tasks",
@@ -114,7 +120,8 @@ const [data, setData] = useState<AnalyticsData | null>(null);
             <span className="text-sm font-bold text-gray-800">Live</span>
           </div>
         </div>
-        {/* stats */}
+
+        {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {statCards.map((stat, index) => {
             const Icon = stat.icon;
@@ -153,84 +160,71 @@ const [data, setData] = useState<AnalyticsData | null>(null);
           })}
         </div>
 
-        {/* task */}
-        <div>
-          {/* Task Status Chart */}
-          <Card className="group bg-white/80 my-10 backdrop-blur-xl border border-gray-200 hover:border-gray-300 transition-all duration-500 hover:shadow-2xl">
-            <CardContent className="p-8">
-              <div className="flex items-center gap-3 mb-8">
-                <div className="p-3 bg-gradient-to-br from-gray-900 to-pink-600 rounded-xl shadow-lg shadow-purple-500/30">
-                  <Activity className="w-6 h-6 text-white" />
-                </div>
-                <h2 className="text-2xl font-bold text-gray-900">
-                  Task Distribution
-                </h2>
+        {/* ✅ FIXED PIE CHART SECTION */}
+        <Card className="group bg-white/80 my-10 backdrop-blur-xl border border-gray-200 hover:border-gray-300 transition-all duration-500 hover:shadow-2xl">
+          <CardContent className="p-8">
+            <div className="flex items-center gap-3 mb-8">
+              <div className="p-3 bg-gradient-to-br from-gray-900 to-pink-600 rounded-xl shadow-lg shadow-purple-500/30">
+                <Activity className="w-6 h-6 text-white" />
               </div>
-              <ResponsiveContainer width="100%" height={320}>
-                <PieChart>
-                  <defs>
-                    <linearGradient
-                      id="completedGradient"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop offset="0%" stopColor="#10b981" />
-                      <stop offset="100%" stopColor="#34d399" />
-                    </linearGradient>
-                    <linearGradient
-                      id="pendingGradient"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop offset="0%" stopColor="#f59e0b" />
-                      <stop offset="100%" stopColor="#fbbf24" />
-                    </linearGradient>
-                  </defs>
-                  <Pie
-                    data={[
-                      { name: "Completed", value: data.completed },
-                      { name: "Pending", value: data.pending },
-                    ]}
-                    dataKey="value"
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={70}
-                    outerRadius={120}
-                    paddingAngle={3}
-                    label={({
-                      name,
-                      percent,
-                    }: {
-                      name: string;
-                      percent: number;
-                    }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    labelStyle={{
-                      fill: "#374151",
-                      fontWeight: "bold",
-                      fontSize: "14px",
-                    }}
-                  >
-                    <Cell fill="url(#completedGradient)" />
-                    <Cell fill="url(#pendingGradient)" />
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "rgba(255, 255, 255, 0.95)",
-                      border: "1px solid rgba(229, 231, 235, 0.8)",
-                      borderRadius: "12px",
-                      boxShadow: "0 10px 40px rgba(0,0,0,0.1)",
-                      backdropFilter: "blur(10px)",
-                      color: "#1f2937",
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+              <h2 className="text-2xl font-bold text-gray-900">
+                Task Distribution
+              </h2>
+            </div>
+
+            <ResponsiveContainer width="100%" height={320}>
+              <PieChart>
+                <defs>
+                  <linearGradient id="completedGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#10b981" />
+                    <stop offset="100%" stopColor="#34d399" />
+                  </linearGradient>
+                  <linearGradient id="pendingGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#f59e0b" />
+                    <stop offset="100%" stopColor="#fbbf24" />
+                  </linearGradient>
+                </defs>
+
+                {/* ✅ FIX: Proper typing using PieLabelRenderProps */}
+                <Pie
+                  data={[
+                    { name: "Completed", value: data.completed },
+                    { name: "Pending", value: data.pending },
+                  ]}
+                  dataKey="value"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={70}
+                  outerRadius={120}
+                  paddingAngle={3}
+                  label={({ name, percent }: PieLabelRenderProps) =>
+                    `${name ?? ""} ${((percent ?? 0) * 100).toFixed(0)}%`
+                  } // ✅ Correct typing & safe fallbacks
+                  labelLine={false} // ✅ improves visuals
+                  labelStyle={{
+                    fill: "#374151",
+                    fontWeight: "bold",
+                    fontSize: "14px",
+                  }}
+                >
+                  <Cell fill="url(#completedGradient)" />
+                  <Cell fill="url(#pendingGradient)" />
+                </Pie>
+
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "rgba(255, 255, 255, 0.95)",
+                    border: "1px solid rgba(229, 231, 235, 0.8)",
+                    borderRadius: "12px",
+                    boxShadow: "0 10px 40px rgba(0,0,0,0.1)",
+                    backdropFilter: "blur(10px)",
+                    color: "#1f2937",
+                  }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
           {/* completion process */}
           <Card className="group bg-white/80 backdrop-blur-3xl border border-gray-200 hover:border-gray-300 transition-all duration-500 hover:shadow-2xl">
             <CardContent className="P-8">
