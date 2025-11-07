@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth"; 
+import { authOptions } from "@/lib/auth";
 import { broadcastMessage } from "@/lib/pusher";
 import { sendNotification } from "@/lib/notify";
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
+
   if (!session) {
     return NextResponse.json({ error: "Not Authenticated" }, { status: 401 });
   }
@@ -22,13 +23,15 @@ export async function POST(req: NextRequest) {
     include: { author: true },
   });
 
+  // ✅ CHANGE #1: broadcastMessage now includes a valid event type from updated EventType union
   await broadcastMessage({
-    type: "COMMENT_ADDED",
+    type: "COMMENT_ADDED", // ✅ This now works because EventType includes "COMMENT_ADDED"
     data: comment,
   });
 
   const mentionRegx = /@(\S+)/g;
   const mentions = content.match(mentionRegx) || [];
+
   if (mentions.length > 0) {
     const task = await prisma.task.findUnique({
       where: { id: taskId },
@@ -45,6 +48,7 @@ export async function POST(req: NextRequest) {
           ],
         },
       });
+
       if (mentionedUser) {
         await sendNotification({
           userId: mentionedUser.id,
@@ -54,12 +58,14 @@ export async function POST(req: NextRequest) {
       }
     }
   }
+
   return NextResponse.json(comment);
 }
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const taskId = searchParams.get("taskId");
+
   if (!taskId) {
     return NextResponse.json({ error: "taskId is required" }, { status: 400 });
   }
