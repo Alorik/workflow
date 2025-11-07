@@ -17,7 +17,7 @@ interface Task {
   id: string;
   title: string;
   description?: string;
-  status: string;
+  status: "todo" | "in_progress" | "done"; // ✅ changed from `string` to union
   projectId: string;
   assignedToId?: string | null;
   dueDate?: string | null;
