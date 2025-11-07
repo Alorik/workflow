@@ -1,6 +1,6 @@
 import { getServerSession } from "next-auth";
 import Link from "next/link";
-import { authOptions } from "../api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth"; 
 import { PrismaClient } from "@prisma/client";
 import SignInButton from "@/components/SignInButton";
 import Profilepage from "@/components/Profile";
