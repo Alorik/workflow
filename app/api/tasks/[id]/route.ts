@@ -1,16 +1,15 @@
-import { NextResponse, NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { pusherServer, broadcastMessage } from "@/lib/pusher";
 import { sendNotification } from "@/lib/notify";
 
-// ✅ PATCH /api/tasks/[id]
 export async function PATCH(
   req: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const { params } = context;
+  const { id } = await context.params;
   const session = await getServerSession(authOptions);
   if (!session?.user?.email)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -20,7 +19,7 @@ export async function PATCH(
       await req.json();
 
     const updatedTask = await prisma.task.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         ...(title && { title }),
         ...(description !== undefined && { description }),
@@ -35,7 +34,6 @@ export async function PATCH(
       },
     });
 
-    // ✅ Optional: send notification if task reassigned
     if (
       updatedTask.assignedToId &&
       updatedTask.assignedToId !== session.user.id
@@ -47,7 +45,6 @@ export async function PATCH(
       });
     }
 
-    // ✅ Create activity log
     const activity = await prisma.activity.create({
       data: {
         type: "TASK_UPDATED",
@@ -59,7 +56,6 @@ export async function PATCH(
       include: { user: true },
     });
 
-    // ✅ Broadcast updates
     await pusherServer.trigger(
       `project-${updatedTask.projectId}`,
       "activity-created",
@@ -82,22 +78,20 @@ export async function PATCH(
   }
 }
 
-// ✅ DELETE /api/tasks/[id]
 export async function DELETE(
   req: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const { params } = context;
+  const { id } = await context.params;
   const session = await getServerSession(authOptions);
   if (!session?.user?.email)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
     const deletedTask = await prisma.task.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
-    // ✅ Log activity
     await prisma.activity.create({
       data: {
         type: "TASK_DELETED",
@@ -108,7 +102,6 @@ export async function DELETE(
       },
     });
 
-    // ✅ Broadcast delete event
     broadcastMessage({
       projectId: deletedTask.projectId,
       type: "TASK_DELETED",
