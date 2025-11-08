@@ -27,6 +27,12 @@ import {
   Zap,
 } from "lucide-react";
 
+
+
+
+
+
+
 interface AnalyticsData {
   totalTasks: number;
   completed: number;
