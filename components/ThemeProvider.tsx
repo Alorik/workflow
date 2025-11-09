@@ -1,9 +1,12 @@
 "use client";
 
-import { SessionProvider } from "next-auth/react";
 import { useEffect } from "react";
 
-export function Providers({ children }: { children: React.ReactNode }) {
+export default function ThemeProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
@@ -14,11 +17,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
     // Set initial theme
     updateTheme();
 
-    // Listen for system theme changes
+    // Listen for changes
     mediaQuery.addEventListener("change", updateTheme);
 
     return () => mediaQuery.removeEventListener("change", updateTheme);
   }, []);
 
-  return <SessionProvider>{children}</SessionProvider>;
+  return <>{children}</>;
 }
