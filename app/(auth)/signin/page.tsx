@@ -10,7 +10,7 @@ export default function SignInPage() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex bg-white dark:bg-white">
       <div className="w-1/2 flex items-center justify-center bg-gradient-to-br from-gray-150 via-gray to-gray-350 px-4">
         <div className="bg-white shadow-[10_4px_15px_rgba(90,71,71,1)] p-8 hover:scale-102 transition-all duration-200">
           <div className="text-center mb-8">

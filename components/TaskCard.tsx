@@ -4,25 +4,24 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, MessageCircle, MoreVertical, User } from "lucide-react";
 
-// ✅ Task status config
 const statusConfig = {
   todo: {
-    bg: "bg-gray-100",
-    text: "text-gray-700",
-    border: "border-gray-300",
-    dot: "bg-gray-400",
+    bg: "bg-gray-100 dark:bg-gray-800",
+    text: "text-gray-700 dark:text-gray-200",
+    border: "border-gray-300 dark:border-gray-600",
+    dot: "bg-gray-400 dark:bg-gray-500",
   },
   in_progress: {
-    bg: "bg-gray-800",
-    text: "text-white",
-    border: "border-gray-800",
-    dot: "bg-gray-600",
+    bg: "bg-gray-800 dark:bg-gray-700",
+    text: "text-white dark:text-gray-100",
+    border: "border-gray-800 dark:border-gray-600",
+    dot: "bg-gray-600 dark:bg-gray-500",
   },
   done: {
-    bg: "bg-black",
-    text: "text-white",
-    border: "border-black",
-    dot: "bg-gray-900",
+    bg: "bg-black dark:bg-gray-900",
+    text: "text-white dark:text-gray-100",
+    border: "border-black dark:border-gray-700",
+    dot: "bg-gray-900 dark:bg-gray-600",
   },
 } as const;
 
@@ -32,9 +31,7 @@ interface Comment {
   id: string;
   content: string;
   createdAt: string;
-  author?: {
-    name: string;
-  };
+  author?: { name: string };
 }
 
 interface Task {
@@ -62,7 +59,6 @@ export default function TaskCard({ task, onUpdated }: TaskCardProps) {
   const [isLoadingComments, setIsLoadingComments] = useState(false);
   const [isPostingComment, setIsPostingComment] = useState(false);
 
-  // ✅ Fetch comments wrapped in useCallback (fixes missing-deps warning)
   const fetchComments = useCallback(async () => {
     try {
       setIsLoadingComments(true);
@@ -80,7 +76,7 @@ export default function TaskCard({ task, onUpdated }: TaskCardProps) {
 
   useEffect(() => {
     fetchComments();
-  }, [fetchComments]); // ✅ ESLint-safe dependency
+  }, [fetchComments]);
 
   async function updateStatus(newStatus: Status) {
     setStatus(newStatus);
@@ -89,7 +85,7 @@ export default function TaskCard({ task, onUpdated }: TaskCardProps) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: newStatus }),
     });
-    onUpdated?.(); // ✅ Marks onUpdated as used
+    onUpdated?.();
   }
 
   async function handleUpdate() {
@@ -104,7 +100,6 @@ export default function TaskCard({ task, onUpdated }: TaskCardProps) {
 
   async function handlePostComment() {
     if (!commentText.trim()) return;
-
     try {
       setIsPostingComment(true);
       const res = await fetch(`/api/comments`, {
@@ -112,7 +107,6 @@ export default function TaskCard({ task, onUpdated }: TaskCardProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content: commentText, taskId: task.id }),
       });
-
       if (res.ok) {
         const newComment: Comment = await res.json();
         setComments((prev) => [...prev, newComment]);
@@ -132,7 +126,6 @@ export default function TaskCard({ task, onUpdated }: TaskCardProps) {
     const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
-
     if (minutes < 1) return "Just now";
     if (minutes < 60) return `${minutes}m ago`;
     if (hours < 24) return `${hours}h ago`;
@@ -144,33 +137,34 @@ export default function TaskCard({ task, onUpdated }: TaskCardProps) {
 
   return (
     <>
-      {/* Card */}
       <motion.div
         whileHover={{ scale: 1.01 }}
         transition={{ type: "spring", stiffness: 400, damping: 30 }}
-        className="group relative bg-white rounded-lg border-2 border-gray-200 hover:border-gray-900 overflow-hidden transition-all duration-300"
+        className="group relative bg-white dark:bg-transparent rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-gray-900 dark:hover:border-gray-500 overflow-hidden transition-all duration-300"
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-700 to-gray-500 opacity-0 group-hover:opacity-5 transition-opacity duration-300"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-700 to-gray-500 dark:from-gray-600 dark:via-gray-800 dark:to-gray-900 opacity-0 group-hover:opacity-5 transition-opacity duration-300"></div>
 
         <div className="relative p-6">
           {/* Header */}
           <div className="flex items-start justify-between mb-4 gap-4">
             <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-xl text-gray-900 mb-2 leading-tight tracking-tight">
+              <h3 className="font-bold text-xl text-gray-900 dark:text-gray-100 mb-2 leading-tight tracking-tight">
                 {title}
               </h3>
-              <p className="text-gray-600 text-sm leading-relaxed">
+              <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
                 {description || "No description provided"}
               </p>
             </div>
-
             <div className="flex items-center gap-2">
               <div className={`w-2 h-2 rounded-full ${config.dot}`}></div>
               <button
                 onClick={() => setIsEditing(true)}
-                className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
               >
-                <MoreVertical size={18} className="text-gray-400" />
+                <MoreVertical
+                  size={18}
+                  className="text-gray-400 dark:text-gray-300"
+                />
               </button>
             </div>
           </div>
@@ -188,41 +182,50 @@ export default function TaskCard({ task, onUpdated }: TaskCardProps) {
             </select>
           </div>
 
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent mb-5"></div>
+          <div className="h-px bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent mb-5"></div>
 
           {/* Comments */}
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <MessageCircle size={16} className="text-gray-400" />
-              <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+              <MessageCircle
+                size={16}
+                className="text-gray-400 dark:text-gray-300"
+              />
+              <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Comments {comments.length > 0 && `(${comments.length})`}
               </span>
-              <div className="flex-1 h-px bg-gray-200"></div>
+              <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
             </div>
 
-            <div className="bg-gray-50 border border-gray-200 rounded-md p-4 mb-3 max-h-[200px] overflow-y-auto">
+            <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md p-4 mb-3 max-h-[200px] overflow-y-auto">
               {isLoadingComments ? (
-                <p className="text-xs text-gray-400">Loading comments...</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">
+                  Loading comments...
+                </p>
               ) : comments.length === 0 ? (
-                <p className="text-xs text-gray-400">No comments yet...</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">
+                  No comments yet...
+                </p>
               ) : (
                 <div className="space-y-3">
                   {comments.map((comment) => (
                     <div key={comment.id} className="flex gap-2">
-                      <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
-                        <User size={14} className="text-gray-600" />
+                      <div className="w-6 h-6 bg-gray-300 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                        <User
+                          size={14}
+                          className="text-gray-600 dark:text-gray-300"
+                        />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-baseline gap-2">
-                          <span className="text-xs font-bold text-gray-900">
+                          <span className="text-xs font-bold text-gray-900 dark:text-gray-100">
                             {comment.author?.name || "User"}
                           </span>
-                          <span className="text-xs text-gray-400">
+                          <span className="text-xs text-gray-400 dark:text-gray-500">
                             {formatTime(comment.createdAt)}
                           </span>
                         </div>
-                        <p className="text-sm text-gray-700 mt-0.5">
+                        <p className="text-sm text-gray-700 dark:text-gray-300 mt-0.5">
                           {comment.content}
                         </p>
                       </div>
@@ -232,7 +235,6 @@ export default function TaskCard({ task, onUpdated }: TaskCardProps) {
               )}
             </div>
 
-            {/* Add Comment */}
             <div className="flex gap-2">
               <input
                 value={commentText}
@@ -242,13 +244,13 @@ export default function TaskCard({ task, onUpdated }: TaskCardProps) {
                     handlePostComment();
                 }}
                 disabled={isPostingComment}
-                className="flex-1 bg-white border-2 border-gray-200 focus:border-gray-900 rounded-md px-4 py-2 text-sm placeholder:text-gray-400 focus:outline-none transition-colors disabled:opacity-50"
+                className="flex-1 bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 focus:border-gray-900 dark:focus:border-gray-500 rounded-md px-4 py-2 text-sm placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none transition-colors disabled:opacity-50"
                 placeholder="Add a comment..."
               />
               <button
                 onClick={handlePostComment}
                 disabled={!commentText.trim() || isPostingComment}
-                className="bg-black text-white px-5 py-2 rounded-md text-sm font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-black dark:bg-gray-700 text-white px-5 py-2 rounded-md text-sm font-semibold hover:bg-gray-800 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isPostingComment ? "Posting..." : "Post"}
               </button>
@@ -264,7 +266,7 @@ export default function TaskCard({ task, onUpdated }: TaskCardProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 flex items-center justify-center bg-gray-900/30 backdrop-blur-md z-50 p-4"
+            className="fixed inset-0 flex items-center justify-center bg-gray-900/30 dark:bg-transparent backdrop-blur-md z-50 p-4"
             onClick={() => setIsEditing(false)}
           >
             <motion.div
@@ -272,10 +274,10 @@ export default function TaskCard({ task, onUpdated }: TaskCardProps) {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
               transition={{ type: "spring", stiffness: 400, damping: 30 }}
-              className="relative bg-white rounded-xl shadow-2xl w-full max-w-xl border-2 border-gray-200 overflow-hidden"
+              className="relative bg-transparent dark:bg-transparent rounded-xl shadow-2xl w-full max-w-xl border-2 border-gray-200 dark:border-gray-700 overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 px-8 py-6">
+              <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 dark:from-gray-700 dark:via-gray-800 dark:to-gray-900 px-8 py-6">
                 <h2 className="text-2xl font-bold text-white tracking-tight">
                   Edit Task
                 </h2>
@@ -290,11 +292,11 @@ export default function TaskCard({ task, onUpdated }: TaskCardProps) {
               <div className="p-8">
                 <div className="space-y-5">
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                    <label className="block text-xs font-bold text-white dark:text-gray-400 uppercase tracking-wider mb-2">
                       Task Title
                     </label>
                     <input
-                      className="w-full bg-white border-2 border-gray-200 focus:border-gray-900 rounded-md p-3 text-base focus:outline-none transition-colors"
+                      className="w-full bg-transparent dark:bg-transparent border-2 border-gray-200 dark:border-gray-700 focus:border-gray-900 dark:focus:border-gray-500 rounded-md p-3 text-base focus:outline-none transition-colors"
                       placeholder="Enter task title..."
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
@@ -302,12 +304,12 @@ export default function TaskCard({ task, onUpdated }: TaskCardProps) {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                    <label className="block text-xs font-bold text-gray-50 dark:text-gray-400 uppercase tracking-wider mb-2">
                       Description
                     </label>
                     <textarea
                       rows={5}
-                      className="w-full bg-white border-2 border-gray-200 focus:border-gray-900 rounded-md p-3 text-base focus:outline-none transition-colors resize-none"
+                      className="w-full bg-transparent dark:bg-transparent border-2 border-gray-200 dark:border-gray-700 focus:border-gray-900 dark:focus:border-gray-500 rounded-md p-3 text-base focus:outline-none transition-colors resize-none"
                       placeholder="Add task description..."
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
@@ -315,16 +317,16 @@ export default function TaskCard({ task, onUpdated }: TaskCardProps) {
                   </div>
                 </div>
 
-                <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-200">
+                <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
                   <button
                     onClick={() => setIsEditing(false)}
-                    className="px-6 py-2.5 bg-white border-2 border-gray-300 text-gray-700 rounded-md font-semibold hover:bg-gray-50 transition-colors"
+                    className="px-6 py-2.5 bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-md font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleUpdate}
-                    className="px-6 py-2.5 bg-black text-white rounded-md font-semibold hover:bg-gray-800 transition-colors"
+                    className="px-6 py-2.5 bg-black dark:bg-gray-700 text-white rounded-md font-semibold hover:bg-gray-800 dark:hover:bg-gray-600 transition-colors"
                   >
                     Save Changes
                   </button>

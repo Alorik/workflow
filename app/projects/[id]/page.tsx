@@ -5,19 +5,17 @@ import TaskCard from "@/components/TaskCard";
 import { pusherClient } from "@/lib/pusherClient";
 import ActivityFeed from "@/components/ActivityFeed";
 
-// ✅ User Type
 interface User {
   id: string;
   name?: string | null;
   email?: string | null;
 }
 
-// ✅ Task Type
 interface Task {
   id: string;
   title: string;
   description?: string;
-  status: "todo" | "in_progress" | "done"; // ✅ changed from `string` to union
+  status: "todo" | "in_progress" | "done";
   projectId: string;
   assignedToId?: string | null;
   dueDate?: string | null;
@@ -39,7 +37,6 @@ export default function TaskPage({
   const [assignedToId, setAssignedToId] = useState<string | null>(null);
   const [dueDate, setDueDate] = useState("");
 
-  // ✅ Fetch Tasks
   const fetchTasks = useCallback(async () => {
     if (!projectId) return;
 
@@ -58,7 +55,6 @@ export default function TaskPage({
     }
   }, [projectId, filter, sort]);
 
-  // ✅ Fetch Users
   const fetchUsers = async () => {
     try {
       const res = await fetch("/api/users");
@@ -71,7 +67,6 @@ export default function TaskPage({
     }
   };
 
-  // ✅ Pusher realtime updates
   useEffect(() => {
     if (!projectId) return;
 
@@ -96,13 +91,11 @@ export default function TaskPage({
     };
   }, [projectId]);
 
-  // ✅ Fetch initial data
   useEffect(() => {
     fetchTasks();
     fetchUsers();
   }, [projectId, filter, sort, fetchTasks]);
 
-  // ✅ Create Task
   async function handleCreateTask() {
     if (!title.trim() || !projectId) return;
 
@@ -136,39 +129,32 @@ export default function TaskPage({
 
   if (!projectId)
     return (
-      <div className="min-h-screen bg-gradient-to-br from-neutral-100 via-gray-50 to-neutral-100 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="flex items-center gap-3">
-          <div className="w-3 h-3 bg-gray-400 rounded-full animate-pulse"></div>
-          <div className="w-3 h-3 bg-blue-400 rounded-full animate-pulse delay-150"></div>
-          <div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse delay-300"></div>
+          <div className="w-3 h-3 bg-gray-400 dark:bg-gray-600 rounded-full animate-pulse"></div>
+          <div className="w-3 h-3 bg-blue-400 dark:bg-blue-500 rounded-full animate-pulse delay-150"></div>
+          <div className="w-3 h-3 bg-emerald-400 dark:bg-emerald-500 rounded-full animate-pulse delay-300"></div>
         </div>
       </div>
     );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-100 via-gray-50 to-neutral-100 relative overflow-hidden">
-      {/* Background Glow */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-20 w-30 h-30 bg-gray-500 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-20 right-20 w-30 h-30 bg-blue-500 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-30 h-30 bg-emerald-300 rounded-full blur-3xl animate-pulse delay-500"></div>
-      </div>
-
+    <div className="min-h-screen relative overflow-hidden transition-colors duration-300 bg-gray-50 dark:bg-transparent">
       <div className="relative z-10 max-w-7xl mx-auto p-8">
         {/* Header */}
-        <div className="mb-8 backdrop-blur-xl bg-white/5 rounded-3xl p-8 border border-white/10 shadow-2xl">
+        <div className="mb-8 backdrop-blur-xl bg-white/80 dark:bg-gray-900/80 rounded-3xl p-8 border border-gray-200 dark:border-gray-800 shadow-xl transition-colors">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-700 via-pink-300 to-gray-800 bg-clip-text text-transparent mb-2">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-700 via-pink-400 to-gray-800 dark:from-gray-200 dark:via-pink-300 dark:to-white bg-clip-text text-transparent mb-2">
                 Project Tasks
               </h1>
-              <p className="text-gray-900/60 text-sm">
-                Manage and track your workflow
+              <p className="text-gray-600 dark:text-gray-400 text-sm">
+                Manage and track your workflow seamlessly
               </p>
             </div>
             <button
               onClick={() => setShowModal(true)}
-              className="group relative px-6 py-3 bg-gradient-to-r from-gray-500 to-emerald-800 rounded-xl font-medium text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+              className="group relative px-6 py-3 bg-gradient-to-r from-gray-500 to-emerald-700 dark:from-gray-700 dark:to-emerald-600 rounded-xl font-medium text-white shadow-lg hover:shadow-emerald-500/30 transition-all duration-300 hover:scale-105"
             >
               <span className="flex items-center gap-2">
                 <svg
@@ -178,7 +164,7 @@ export default function TaskPage({
                   stroke="currentColor"
                 >
                   <path
-                    strokeLinecap="square"
+                    strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
                     d="M12 4v16m8-8H4"
@@ -191,12 +177,11 @@ export default function TaskPage({
         </div>
 
         {/* Filters */}
-        <div className="mb-6 flex gap-4">
-          {/* Filter by Status */}
+        <div className="mb-6 flex flex-wrap gap-4">
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            className="appearance-none bg-white/10 backdrop-blur-xl border-2 border-purple-200 rounded-xl px-6 py-3 text-gray-600 font-medium focus:outline-none hover:bg-emerald-50"
+            className="appearance-none bg-white/80 dark:bg-gray-900/80 border-2 border-purple-200 dark:border-purple-800 rounded-xl px-6 py-3 text-gray-700 dark:text-gray-300 font-medium focus:outline-none focus:ring-2 focus:ring-purple-400 dark:focus:ring-purple-600 hover:bg-purple-50/50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
           >
             <option value="all">All Tasks</option>
             <option value="todo">To Do</option>
@@ -204,11 +189,10 @@ export default function TaskPage({
             <option value="done">Done</option>
           </select>
 
-          {/* Sort */}
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value)}
-            className="appearance-none bg-white/10 backdrop-blur-xl border-2 border-purple-200 rounded-xl px-6 py-3 text-gray-600 font-medium focus:outline-none hover:bg-emerald-50"
+            className="appearance-none bg-white/80 dark:bg-gray-900/80 border-2 border-purple-200 dark:border-purple-800 rounded-xl px-6 py-3 text-gray-700 dark:text-gray-300 font-medium focus:outline-none focus:ring-2 focus:ring-purple-400 dark:focus:ring-purple-600 hover:bg-purple-50/50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
           >
             <option value="newest">Newest First</option>
             <option value="oldest">Oldest First</option>
@@ -220,10 +204,12 @@ export default function TaskPage({
         <div className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-4">
             {tasks.length === 0 ? (
-              <div className="backdrop-blur-xl bg-white/5 rounded-2xl p-12 border border-white/10 text-center">
-                <p className="text-gray-900/60 text-lg">No tasks found</p>
-                <p className="text-gray-900/40 text-sm mt-2">
-                  Create your first task to get started
+              <div className="backdrop-blur-xl bg-white/80 dark:bg-gray-900/80 rounded-2xl p-12 border border-gray-200 dark:border-gray-800 text-center shadow-inner">
+                <p className="text-gray-700 dark:text-gray-300 text-lg">
+                  No tasks found
+                </p>
+                <p className="text-gray-500 dark:text-gray-500 text-sm mt-2">
+                  Create your first task to get started 🚀
                 </p>
               </div>
             ) : (
@@ -241,18 +227,18 @@ export default function TaskPage({
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray/60 backdrop-blur-md z-50 p-4">
-          <div className="bg-transparent backdrop-blur-2xl rounded-3xl p-8 w-full max-w-lg shadow-2xl border border-white/10">
+        <div className="fixed inset-0 flex items-center justify-center bg-transparent dark:bg-transparent backdrop-blur-md z-50 p-4 transition-all">
+          <div className="bg-transparent/95 dark:bg-transparent-900/95 backdrop-blur-2xl rounded-3xl p-8 w-full max-w-lg shadow-2xl border border-gray-200 dark:border-gray-800 transition-colors">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-800 via-pink-300 to-gray-900 bg-clip-text text-transparent">
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-800 via-pink-400 to-gray-900 dark:from-gray-200 dark:via-pink-300 dark:to-white bg-clip-text text-transparent">
                 Create New Task
               </h2>
               <button
                 onClick={() => setShowModal(false)}
-                className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all hover:rotate-90 duration-300"
+                className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center transition-all hover:rotate-90 duration-300"
               >
                 <svg
-                  className="w-5 h-5 text-gray-900"
+                  className="w-5 h-5 text-gray-700 dark:text-gray-300"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -267,14 +253,13 @@ export default function TaskPage({
               </button>
             </div>
 
-            {/* Form */}
             <div className="space-y-5">
               <div>
-                <label className="block text-gray-600 text-sm font-medium mb-2">
+                <label className="block text-gray-700 dark:text-gray-300 text-sm font-medium mb-2">
                   Task Title
                 </label>
                 <input
-                  className="w-full bg-white border rounded-xl px-4 py-3 text-gray-700 focus:ring-2 focus:ring-purple-400/50 transition-all"
+                  className="w-full bg-transparent dark:bg-transparent border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-3 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-500 focus:ring-2 focus:ring-purple-400 dark:focus:ring-purple-600 focus:border-transparent transition-all"
                   placeholder="Enter task title..."
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
@@ -283,11 +268,11 @@ export default function TaskPage({
               </div>
 
               <div>
-                <label className="block text-gray-600 text-sm font-medium mb-2">
+                <label className="block text-gray-700 dark:text-gray-300 text-sm font-medium mb-2">
                   Description
                 </label>
                 <textarea
-                  className="w-full bg-white border rounded-xl px-4 py-3 text-gray-700 resize-none h-28 focus:ring-2 focus:ring-purple-400/50"
+                  className="w-full bg-transparent dark:bg-transparent border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-3 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-500 resize-none h-28 focus:ring-2 focus:ring-purple-400 dark:focus:ring-purple-600 focus:border-transparent transition-all"
                   placeholder="Add details about this task..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -295,15 +280,14 @@ export default function TaskPage({
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                {/* Assigned To */}
                 <div>
-                  <label className="block text-gray-600 text-sm font-medium mb-2">
+                  <label className="block text-gray-700 dark:text-gray-300 text-sm font-medium mb-2">
                     Assigned To
                   </label>
                   <select
                     value={assignedToId || ""}
                     onChange={(e) => setAssignedToId(e.target.value)}
-                    className="w-full bg-white border rounded-xl px-4 py-3 text-gray-700 focus:ring-2 focus:ring-purple-400/50 transition-all cursor-pointer"
+                    className="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-3 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-400 dark:focus:ring-purple-600 focus:border-transparent transition-all cursor-pointer"
                   >
                     <option value="">Unassigned</option>
                     {users.map((user) => (
@@ -314,32 +298,30 @@ export default function TaskPage({
                   </select>
                 </div>
 
-                {/* Due Date */}
                 <div>
-                  <label className="block text-gray-600 text-sm font-medium mb-2">
+                  <label className="block text-gray-700 dark:text-gray-300 text-sm font-medium mb-2">
                     Due Date
                   </label>
                   <input
                     type="date"
                     value={dueDate}
                     onChange={(e) => setDueDate(e.target.value)}
-                    className="w-full bg-white border rounded-xl px-4 py-3 text-gray-700 focus:ring-2 focus:ring-purple-400/50 transition-all cursor-pointer"
+                    className="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-3 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-400 dark:focus:ring-purple-600 focus:border-transparent transition-all cursor-pointer"
                   />
                 </div>
               </div>
             </div>
 
-            {/* Footer */}
             <div className="flex justify-end gap-3 mt-8">
               <button
                 onClick={() => setShowModal(false)}
-                className="px-6 py-3 bg-gray-100 border rounded-xl text-gray-700 hover:bg-gray-200 transition-all duration-200"
+                className="px-6 py-3 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-200"
               >
                 Cancel
               </button>
               <button
                 onClick={handleCreateTask}
-                className="px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-xl hover:scale-105 transition-all duration-200"
+                className="px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-700 dark:from-gray-700 dark:to-gray-800 text-white rounded-xl hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-purple-500/20"
               >
                 Create Task
               </button>
