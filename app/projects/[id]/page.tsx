@@ -227,7 +227,7 @@ export default function TaskPage({
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-transparent dark:bg-transparent backdrop-blur-md z-50 p-4 transition-all">
+        <div className="fixed inseat-0 flex items-center justify-center bg-transparent dark:bg-transparent backdrop-blur-md z-50 p-4 transition-all">
           <div className="bg-transparent/95 dark:bg-transparent-900/95 backdrop-blur-2xl rounded-3xl p-8 w-full max-w-lg shadow-2xl border border-gray-200 dark:border-gray-800 transition-colors">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-800 via-pink-400 to-gray-900 dark:from-gray-200 dark:via-pink-300 dark:to-white bg-clip-text text-transparent">
