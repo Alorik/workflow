@@ -23,6 +23,7 @@ model User{
   comments  Comment[]  
   activities   Activity[]  
   notification  Notification[]
+  projectManager  ProjectManager[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
@@ -37,6 +38,7 @@ model Project{
   ownerId      String
   tasks        Task[]
   activities   Activity[]
+  projectManager  ProjectManager[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
@@ -118,4 +120,19 @@ model Notification{
   read        Boolean  @default(false)
   createdAt   DateTime @default(now())
   user        User     @relation(fields: [userId], references: [id])
+}
+
+model ProjectManager{
+  id         String   @id @default(cuid())
+  role       Role     @default(MEMBER)
+  userId     String
+  projectId  String
+  user       User     @relation(fields: [userId], references: [id])
+  project    Project  @relation(fields: [projectId], references: [id])
+}
+
+enum Role {
+  OWNER
+  MANAGER
+  MEMBER
 }
