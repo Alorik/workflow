@@ -24,6 +24,7 @@ export default function InfiniteMovingCards({
   const [start, setStart] = useState(false);
 
   function addAnimations() {
+    if (!containerRef.current || !scrollerRef.current) return;
     if (containerRef.current && scrollerRef) {
       const scrollerContent = Array.from(scrollerRef.current.children);
       scrollerContent.forEach((item) => {
