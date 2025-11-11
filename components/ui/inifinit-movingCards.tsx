@@ -20,7 +20,7 @@ export default function InfiniteMovingCards({
   className?: string;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const scrollerRef = useRef<HTMLDivElement>(null);
+  const scrollerRef = useRef<HTMLUListElement>(null);
   const [start, setStart] = useState(false);
 
   function addAnimations() {
