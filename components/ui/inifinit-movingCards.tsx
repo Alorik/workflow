@@ -34,7 +34,7 @@ export default function InfiniteMovingCards({
       });
       getDirection();
       getSpeed();
-      setStart(true);
+      setTimeout(() => setStart(true), 0);
     }
   }
 
