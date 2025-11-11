@@ -6,6 +6,7 @@ import { CheckCircle2, Users, Target, TrendingUp, Rocket } from "lucide-react";
 import { useRouter } from "next/navigation";
 import MidCard from "./Mid";
 import SlideCard from "./SlideCard";
+import Cards from "./Cards";
 
 export default function HomeHero() {
   const router = useRouter();
@@ -157,6 +158,7 @@ export default function HomeHero() {
       </section>
       <MidCard />
       <SlideCard />
+<Cards />
     </div>
   );
 }
