@@ -4,9 +4,9 @@ import { MdKeyboardDoubleArrowRight } from "react-icons/md";
 import { motion } from "framer-motion";
 import { CheckCircle2, Users, Target, TrendingUp, Rocket } from "lucide-react";
 import { useRouter } from "next/navigation";
-import MidCard from "./Mid";
 import SlideCard from "./SlideCard";
 import Cards from "./Cards";
+import MidCard from "./Mid";
 
 export default function HomeHero() {
   const router = useRouter();

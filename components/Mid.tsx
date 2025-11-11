@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useMotionTemplate, useScroll, useTransform } from "motion/react";
 import { motion } from "motion/react";
 
-const page = () => {
+export default function MidCard(){
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -61,4 +61,3 @@ const page = () => {
   );
 };
 
-export default page;
