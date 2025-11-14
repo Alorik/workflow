@@ -23,7 +23,7 @@ export default function MidCard(){
   return (
     <div
       ref={containerRef}
-      className="min-h-[200vh] w-full bg-transparent flex flex-col items-center pt-80 [perspective:800px] [transform-style:preserve-3d]"
+      className="min-h-[170vh] w-full bg-transparent flex flex-col items-center pt-80 [perspective:800px] [transform-style:preserve-3d]"
     >
       <motion.h1
         style={{
@@ -48,11 +48,11 @@ export default function MidCard(){
         <div className="bg-black h-full w-full rounded-[16px] ">
           <div className="bg-transparent h-full w-full rounded-[12px]">
             <Image
-              className="h-full w-full"
+              className="h-full w-full rounded-xl"
               src="/mid.png"
               alt="mac"
               width={1024}
-              height={700}
+              height={550}
             ></Image>
           </div>
         </div>
