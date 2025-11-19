@@ -8,6 +8,7 @@ export async function canAccessProject(userId: string, projectId: string) {
       projectId: projectId,
     },
   });
-console.log(projectId)
+  console.log(projectId);
+  console.log("hola");
   
 }
