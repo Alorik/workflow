@@ -22,20 +22,20 @@ export async function POST(req: Request) {
   const token = uuidv4();
   const expireDate = new Date(Date.now() + 1000 * 60 * 10);
 
-  await prisma.resetToken.create({
-    data: {
-      token,
-      userId: user.id,
-      expiresAt: expireDate,
-    },
-  })
+await prisma.user.update({
+  where: { id: user.id },
+  data: {
+    resetToken: token,
+    resetTokenExpiry: expireDate,
+  },
+});
 
   const resetUrl = `${process.env.NEXTAUTH_URL}/reset-password?token=${token}`;
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
       user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
+      pass: process.env.EMAIL_PASSWORD,
     },
   });
 
