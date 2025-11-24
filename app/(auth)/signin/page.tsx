@@ -31,6 +31,11 @@ export default function SignInPage() {
               className="w-full h-12 bg-white cursor-pointer hover:bg-gray-50 text-gray-700 border-2 border-gray-200 hover:border-gray-300 font-medium transition-all duration-200 flex items-center justify-center gap-3 rounded-md px-4"
               placeholder="Password"
             />
+        <p className="text-center text-sm mt-1">
+          <a href="/forgot-password" className="text-blue-600 hover:underline">
+            Forgot Password?
+          </a>
+        </p>
 
             <Button
               type="button"

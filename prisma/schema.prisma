@@ -16,6 +16,8 @@ model User{
   password  String?
   image     String?
   emailVerified DateTime? 
+  resetToken  String?
+  resetokenExpiry  DateTime?
   accounts  Account[]
   sessions  Session[]
   projects  Project[]
@@ -23,7 +25,7 @@ model User{
   comments  Comment[]  
   activities   Activity[]  
   notification  Notification[]
- members ProjectMember[]  
+  members ProjectMember[]  
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
