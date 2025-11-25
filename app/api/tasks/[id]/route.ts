@@ -5,39 +5,68 @@ import { prisma } from "@/lib/prisma";
 import { pusherServer, broadcastMessage } from "@/lib/pusher";
 import { sendNotification } from "@/lib/notify";
 
+async function ensureTaskAccess(taskId: string, userId: string) {
+  const task = await prisma.task.findUnique({
+    where: { id: taskId },
+    select: {
+      projectId: true,
+      project: {
+        select: {
+          ownerId: true, //Get project owner ID
+        },
+      },
+    },
+  });
+  if (!task) return null;
+
+  const hasAccess = task.project.ownerId === userId;
+
+  return hasAccess ? task : null;
+}
+
 export async function PATCH(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
   const { id } = await context.params;
   const session = await getServerSession(authOptions);
-  if (!session?.user?.email)
+  if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
+  const userId = session.user.id as string;
   try {
-    const { title, description, status, dueDate, assignedToId } =
-      await req.json();
+    const task = await ensureTaskAccess(id, userId);
+    if (!task) {
+      return NextResponse.json(
+        { error: "You do not have access to this task" },
+        { status: 403 }
+      );
+    }
+
+    const body = await req.json();
 
     const updatedTask = await prisma.task.update({
       where: { id },
       data: {
-        ...(title && { title }),
-        ...(description !== undefined && { description }),
-        ...(status && { status }),
-        ...(dueDate !== undefined && {
-          dueDate: dueDate ? new Date(dueDate) : null,
+        ...(body.title && { title: body.title }),
+        ...(body.description !== undefined && {
+          description: body.description,
         }),
-        ...(assignedToId !== undefined && { assignedToId }),
+        ...(body.status && { status: body.status }),
+        ...(body.dueDate !== undefined && {
+          dueDate: body.dueDate ? new Date(body.dueDate) : null,
+        }),
+        ...(body.assignedToId !== undefined && {
+          assignedToId: body.assignedToId,
+        }),
       },
       include: {
-        assignedTo: { select: { id: true, name: true, email: true } },
+        assignedTo: true,
       },
     });
 
-    if (
-      updatedTask.assignedToId &&
-      updatedTask.assignedToId !== session.user.id
-    ) {
+    if (updatedTask.assignedToId && updatedTask.assignedToId !== userId) {
       await sendNotification({
         userId: updatedTask.assignedToId,
         message: `${session.user.name} assigned you a task: ${updatedTask.title}`,
@@ -84,10 +113,17 @@ export async function DELETE(
 ) {
   const { id } = await context.params;
   const session = await getServerSession(authOptions);
-  if (!session?.user?.email)
+  if (!session?.user?.id)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
+  const userId = session.user.id;
   try {
+    const task = await ensureTaskAccess(id, userId);
+    if (!task) {
+      return NextResponse.json(
+        { error: "You do not have access to this task" },
+        { status: 403 }
+      );
+    }
     const deletedTask = await prisma.task.delete({
       where: { id },
     });

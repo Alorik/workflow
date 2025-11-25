@@ -8,56 +8,55 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-model User{
-  id        String    @id @default(cuid())
-  name      String?
-  email     String?   @unique
-  password  String?
-  image     String?
-  emailVerified DateTime? 
-  resetToken  String?
-  resetTokenExpiry  DateTime?
-  accounts  Account[]
-  sessions  Session[]
-  projects  Project[]
-  tasks     Task[]
-  comments  Comment[]  
-  activities   Activity[]  
-  notification  Notification[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-
+model User {
+  id               String          @id @default(cuid())
+  name             String?
+  email            String?         @unique
+  password         String?
+  image            String?
+  emailVerified    DateTime?
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  accounts         Account[]
+  sessions         Session[]
+  projects         Project[]
+  tasks            Task[]
+  comments         Comment[]
+  activities       Activity[]
+  notification     Notification[]
+  projectMembers   ProjectMember[]
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
 }
 
-model Project{
-  id           String    @id @default(cuid())
-  name         String
-  description  String?
-  status       String   @default("active")
-  owner        User     @relation(fields: [ownerId], references: [id])
-  ownerId      String
-  tasks        Task[]
-  activities   Activity[]
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+model Project {
+  id             String          @id @default(cuid())
+  name           String
+  description    String?
+  status         String          @default("active")
+  owner          User            @relation(fields: [ownerId], references: [id])
+  ownerId        String
+  tasks          Task[]
+  activities     Activity[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  projectMembers ProjectMember[]
 }
-
 
 model Task {
   id           String     @id @default(cuid())
   title        String
   description  String?
   status       String     @default("todo")
-  project      Project    @relation(fields: [projectId], references: [id])  // Singular!
+  project      Project    @relation(fields: [projectId], references: [id]) // Singular!
   projectId    String
   assignedTo   User?      @relation(fields: [assignedToId], references: [id])
   assignedToId String?
-  comments     Comment[]  
+  comments     Comment[]
   activities   Activity[]
-  dueDate      DateTime?  // Added this
+  dueDate      DateTime? // Added this
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
-
 }
 
 model Comment {
@@ -71,13 +70,13 @@ model Comment {
 }
 
 model Account {
-  id                String     @id @default(cuid())
+  id                String  @id @default(cuid())
   userId            String
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String?     @db.Text
-  access_token      String?     @db.Text
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
   expires_at        Int?
   token_type        String?
   scope             String?
@@ -97,26 +96,42 @@ model Session {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-
 model Activity {
-  id          String   @id @default(cuid())
-  type        String   // "TASK_CREATED", "TASK_UPDATED", "COMMENT_ADDED", etc.
-  message     String
-  projectId   String
-  taskId      String?
-  userId      String?
-  createdAt   DateTime @default(now())
-  project     Project  @relation(fields: [projectId], references: [id])
-  task        Task?    @relation(fields: [taskId], references: [id])
-  user        User?    @relation(fields: [userId], references: [id])
+  id        String   @id @default(cuid())
+  type      String // "TASK_CREATED", "TASK_UPDATED", "COMMENT_ADDED", etc.
+  message   String
+  projectId String
+  taskId    String?
+  userId    String?
+  createdAt DateTime @default(now())
+  project   Project  @relation(fields: [projectId], references: [id])
+  task      Task?    @relation(fields: [taskId], references: [id])
+  user      User?    @relation(fields: [userId], references: [id])
 }
 
-model Notification{
-  id          String   @id @default(cuid())
-  userId      String
-  message     String
-  link        String?
-  read        Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  user        User     @relation(fields: [userId], references: [id])
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  message   String
+  link      String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model ProjectMember {
+  id        String   @id @default(cuid())
+  project   Project  @relation(fields: [projectId], references: [id])
+  projectId String
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  role      Role     @default(MEMBER)
+  createdAt DateTime @default(now())
+
+  @@unique([projectId, userId])
+}
+
+enum Role {
+  OWNER
+  MEMBER
 }

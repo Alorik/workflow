@@ -10,12 +10,18 @@ export async function GET() {
     return NextResponse.json({ message: "Not Authenticated" }, { status: 401 });
   }
 
-  const projects = await prisma.project.findMany({
-    where: {
-      ownerId: session.user.id,
+  const userId = session.user.id as string;
+  const membership = await prisma.projectMember.findMany({
+    where: { userId },
+    include: {
+      project: true
     },
+    orderBy: {
+      createdAt: "desc"
+    }
   });
 
+  const projects = membership.map((m) => m.project);
   return NextResponse.json(projects);
 }
 
@@ -26,13 +32,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: "Not Authenticated" }, { status: 401 });
   }
 
+  const userId = session.user.id as string;
   const { name, description } = await req.json();
 
   const project = await prisma.project.create({
     data: {
       name,
       description,
-      ownerId: session.user.id, // ✅ no `any`
+      ownerId: userId, // ✅ no `any`
+    },
+  });
+
+  await prisma.projectMember.create({
+    data: {
+      projectId: project.id,
+      userId,
+      role: "OWNER",
     },
   });
 
