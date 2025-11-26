@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import SlideCard from "./SlideCard";
 import Cards from "./Cards";
 import MidCard from "./Mid";
+import Footer from "./Footer";
 
 export default function HomeHero() {
   const router = useRouter();
@@ -158,7 +159,8 @@ export default function HomeHero() {
       </section>
       <MidCard />
       <SlideCard />
-<Cards />
+      <Cards />
+      <Footer />
     </div>
   );
 }
