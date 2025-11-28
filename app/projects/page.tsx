@@ -17,7 +17,6 @@ interface Project {
   name: string;
   description?: string | null;
   createdAt?: string;
-  role?: "OWNER" | "MEMBER";
 }
 
 export default function ProjectPage() {
@@ -135,9 +134,9 @@ export default function ProjectPage() {
               type="text"
               value={name}
               onChange={(e) => {
-                console.log("Input changed:", e.target.value); // ADD THIS
-                setName(e.target.value);
-              }}
+    console.log("Input changed:", e.target.value); // ADD THIS
+    setName(e.target.value);
+  }}
               onKeyDown={(e) => e.key === "Enter" && createProject()}
               placeholder="Enter project name..."
               className="flex-1 px-4 py-3 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:border-indigo-500 dark:focus:border-indigo-400 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none transition-colors"

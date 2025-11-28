@@ -13,6 +13,7 @@ import {
   Lock,
   LayoutDashboard,
 } from "lucide-react";
+import BeamButton from "@/components/BeamButton";
 
 const prisma = new PrismaClient();
 
@@ -74,14 +75,23 @@ export default async function DashboardPage() {
               </p>
             </div>
           </div>
-          <Link
+          <div  className="flex gap-5">
+       <Link
             href="/projects"
             className="group inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-gray-600 to-[#c0e3da] dark:from-gray-700 dark:to-[#8bc4b5] text-white font-semibold rounded-xl hover:from-gray-700 hover:to-[#c0e3da] dark:hover:from-gray-600 dark:hover:to-[#9dd4c4] transition-all duration-300 shadow-lg shadow-gray-500/30 dark:shadow-gray-900/50 hover:shadow-xl hover:shadow-gray-500/40 dark:hover:shadow-gray-900/60 hover:scale-105"
           >
             <Plus className="w-5 h-5" />
             New Project
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Link>
+                <Link
+            href="/dashboard/analytics"
+          >
+            <BeamButton />
           </Link>
+          </div>
+   
+          
         </div>
 
         {/* Projects Grid */}
