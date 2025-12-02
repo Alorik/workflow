@@ -8,7 +8,7 @@ export async function POST(req: Request) {
   if (!email) {
     return NextResponse.json({ message: "Email is required!" }, { status: 400 });
   }
-  console.log("hola");
+  console.log("holssa");
 
   const user = await prisma.user.findUnique({
     where: { email },
@@ -16,7 +16,7 @@ export async function POST(req: Request) {
 
    if (!user) {
     return NextResponse.json({
-      message: "If account exists, a reset link will be sent.",
+      message: "If account exists, a reset link will be sent."
     });
    }
   
