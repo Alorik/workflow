@@ -1,46 +1,67 @@
-🚀 Workflow — Team & Task Management Platform
+🧿 Alorik — Modern Workflow & Team Collaboration Platform
 
-Workflow is a full-stack team and task management web app built with modern technologies like Next.js, Prisma, and PostgreSQL.
-It enables real-time collaboration, smooth project tracking, and intelligent analytics — all wrapped in a responsive, modern UI powered by Tailwind CSS and Framer Motion.
+🚀 A powerful, real-time workflow management and team collaboration application built with Next.js and TypeScript, featuring authentication, task management, live messaging, activity feed, and modern UI animations.
 
 ⸻
 
-🧩 Features
+✨ Key Features
+	•	🔐 Authentication & Security — NextAuth, protected routes, sessions & Zod validation
+	•	📝 Task Management — create, update, delete, assign, filter & organize tasks
+	•	🧵 Real-Time Chat — project level group chat with WebSockets
+	•	📰 Activity Feed — instant UI updates on changes
+	•	🎨 Modern UI/UX — Tailwind CSS + Framer Motion
+	•	🗄 Database Layer — Prisma + Supabase/PostgreSQL
+	•	⚡ App Router Architecture — clean, scalable, future-proof codebase
 
-✅ Project Management — Create, edit, and organize projects with ease.
-✅ Task Tracking — Assign tasks, set priorities, and monitor progress.
-✅ Real-Time Collaboration — Built with Pusher for instant updates across users.
-✅ User Authentication — Secure login/signup via Google using NextAuth.js.
-✅ Analytics Dashboard — Interactive charts and metrics using Recharts.
-✅ Role-Based Access — Separate roles for Admin, Manager, and Member.
-✅ Responsive UI — Works seamlessly across desktop, tablet, and mobile.
-✅ Animations & UX — Smooth transitions powered by Framer Motion.
-
-
-🛠️ Tech Stack
-
-Layer           Technology
-Frontend        Next.js 14￼, React 18￼, TypeScript￼
-Styling         Tailwind CSS￼, ShadCN UI￼, Framer Motion￼
-Backend         Next.js API Routes￼
-Database        PostgreSQL,￼
-ORM             Prisma￼
-Authentication  NextAuth.js￼
-Real-Time       Pusher￼
-Charts          Recharts￼
-Deployment      Vercel
+⸻
 
 
-// add
+🧰 Tech Stack
+Category	Tech
+Framework	Next.js 14+ (App Router)
+Styling		Tailwind CSS, Framer Motion
+Auth			NextAuth, Zod
+Database	Prisma, PostgreSQL, Supabase
+Real-Time WebSockets / Pusher
+State 		React Hooks, SWR/React Query (optional)
+Type Safety	TypeScript
 
-🧠 Future Improvements
-	•	✅ Add Kanban Board View
-	•	✅ Add Notifications System
-	•	✅ Add Dark Mode Toggle
-	•	✅ Add AI-based Task Suggestions
-	•	✅ Add Team Chat Integration
+🚨 Environment Requirements
+	•	PostgreSQL / Supabase database
+	•	Pusher app for real-time events
 
 
+🧩 Core Modules
 
-Nitin Kirola
-💼 Full Stack Developer
+🔒 Authentication Module
+	•	NextAuth integration
+	•	Session based login
+	•	Middleware route protection
+
+📌 Task Manager Module
+	•	CRUD operations
+	•	Status columns
+	•	Filters & sorting
+
+
+📰 Activity Feed Module
+	•	Real-time actions displayed
+	•	Notifications
+
+	
+⸻
+
+🚀 Deployment
+
+Recommended Hosting
+	•	Vercel (Next.js optimized)
+	•	Supabase hosted database
+	•	Pusher cloud for events
+
+
+	📬 Contact
+
+If you have any questions, suggestions or issues:
+	•	Author: Nitin Kirola 
+	•	Email: nitinkirola1701@gmail.com
+	•	GitHub: https://github.com/Alorik
