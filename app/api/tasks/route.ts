@@ -1,26 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { authOptions } from "@/lib/auth"; 
+import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth";
 import { pusherServer } from "@/lib/pusher";
 import { logActivity } from "@/lib/activity";
-
-async function ensureProjectMember(projectId: string, userId: string) {
-  const membership = await prisma.projectMember.findMany({
-    where: {
-      projectId,
-      userId,
-    },
-  });
-  return membership;
-}
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Not Authenticated" }, { status: 401 });
   }
-  const userId = session.user.id as string;
+
   const { searchParams } = new URL(req.url);
   const projectId = searchParams.get("projectId");
   const status = searchParams.get("status");
@@ -30,16 +20,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Project ID required" }, { status: 400 });
   }
 
-  const membership = await ensureProjectMember(projectId, userId);
-  if (!membership) {
-    return NextResponse.json(
-      { error: "You do not have access to this project" },
-      { status: 403 }
-    );
-  }
-
-
-  // ✅ Explicitly type your "where" filter instead of using any
   const where: { projectId: string; status?: string } = { projectId };
   if (status && status !== "all") {
     where.status = status;
@@ -49,18 +29,18 @@ export async function GET(req: NextRequest) {
     sort === "oldest"
       ? { createdAt: "asc" as const }
       : sort === "due"
-        ? { dueDate: "asc" as const }
-        : { createdAt: "desc" as const };
+      ? { dueDate: "asc" as const }
+      : { createdAt: "desc" as const };
 
-const tasks = await prisma.task.findMany({
-  where,
-  include: {
-    assignedTo: {
-      select: { id: true, name: true, email: true },
+  const tasks = await prisma.task.findMany({
+    where,
+    include: {
+      assignedTo: {
+        select: { id: true, name: true, email: true },
+      },
     },
-  },
-  orderBy,
-});
+    orderBy,
+  });
 
   return NextResponse.json(tasks);
 }
@@ -70,8 +50,6 @@ export async function POST(req: NextRequest) {
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Not Authenticated" }, { status: 401 });
   }
-
-  const userId = session.user.id as string;
 
   const { title, description, projectId, assignedToId, dueDate } =
     await req.json();
@@ -83,10 +61,6 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const membership = await ensureProjectMember(projectId, userId);
-  if (!membership) {
-    return NextResponse.json({ error: "You don't have acces to this project" }, { status: 403 });
-  }
   const task = await prisma.task.create({
     data: {
       title,
