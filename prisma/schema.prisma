@@ -24,7 +24,6 @@ model User {
   comments         Comment[]
   activities       Activity[]
   notification     Notification[]
-  projectMembers   ProjectMember[]
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
 }
@@ -40,7 +39,6 @@ model Project {
   activities     Activity[]
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
-  projectMembers ProjectMember[]
 }
 
 model Task {
@@ -119,29 +117,3 @@ model Notification {
   user      User     @relation(fields: [userId], references: [id])
 }
 
-model ProjectMember {
-  id        String   @id @default(cuid())
-  project   Project  @relation(fields: [projectId], references: [id])
-  projectId String
-  user      User     @relation(fields: [userId], references: [id])
-  userId    String
-  role      Role     @default(MEMBER)
-  createdAt DateTime @default(now())
-
-  @@unique([projectId, userId])
-}
-
-model Message{
-  id        String    @id @default(cuid())
-  content   String
-  project   Project   @relation(fields: [projectId], references: [id])
-  projectId String
-  Sender    User      @relation(fields: [senderId], references: [id])
-  senderId  String
-  createdAt DateTime @default(now())
-}
-
-enum Role {
-  OWNER
-  MEMBER
-}
