@@ -10,6 +10,11 @@ export default function Cards() {
       title: "Full Stack Developer",
     },
     {
+     quote: "An excellent initiative that brings top schools under one roof. The exhibition provided clarity, transparency, and valuable interactions with school representatives.",
+name: "Sumit",
+title: "Technology Consultant",
+    },
+    {
       quote:
         "Absolutely love the smooth UI and minimal design. Every feature feels polished and well-thought-out, making daily collaboration simple and enjoyable.",
       name: "Sarah Lee",
