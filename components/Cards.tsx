@@ -13,7 +13,12 @@ export default function Cards() {
      quote: "An excellent initiative that brings top schools under one roof. The exhibition provided clarity, transparency, and valuable interactions with school representatives.",
 name: "Sumit",
 title: "Technology Consultant",
+    },{
+          quote: "The exhibition was extremely helpful in understanding different curricula and fee structures. Speaking directly with school heads gave me the confidence to shortlist the right options for my child.",
+name: "Ritika Sharma",
+title: "Marketing Manager & Parent",
     },
+
     {
       quote:
         "Absolutely love the smooth UI and minimal design. Every feature feels polished and well-thought-out, making daily collaboration simple and enjoyable.",
